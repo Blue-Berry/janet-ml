@@ -1,0 +1,24 @@
+(library
+ (name janet_ml)
+ (libraries ctypes ctypes.stubs)
+ (foreign_stubs
+  (language c)
+  (names janet)
+  (flags
+   (:standard -std=c99 -DJANET_NO_NANBOX)))
+ (c_library_flags (-lm -ldl))
+ (ctypes
+  (external_library_name janet_vendor)
+  (build_flags_resolver
+   (vendored
+    (c_flags (:standard -I. -std=c99 -DJANET_NO_NANBOX))
+    (c_library_flags (-lm -ldl))))
+  (headers (include "janet.h"))
+  (type_description
+   (instance Types)
+   (functor Type_description))
+  (function_description
+   (instance Functions)
+   (functor Function_description))
+  (generated_types Types_generated)
+  (generated_entry_point C)))
