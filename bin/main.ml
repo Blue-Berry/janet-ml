@@ -1,6 +1,7 @@
+
 let () =
-  let module F = Janet_ml.C.Functions in
-  let module T = Janet_ml.C.Types in
+  let module F = Janet_c.C.Functions in
+  let module T = Janet_c.C.Types in
   let rc = F.janet_init () in
   if rc <> 0 then failwith "janet_init failed";
   Printf.printf

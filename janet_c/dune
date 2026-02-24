@@ -1,5 +1,5 @@
 (library
- (name janet_ml)
+ (name janet_c)
  (libraries ctypes ctypes.stubs)
  (foreign_stubs
   (language c)

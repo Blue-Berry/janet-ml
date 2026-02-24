@@ -1,4 +1,4 @@
 (executable
  (public_name janet-ml)
  (name main)
- (libraries janet_ml))
+ (libraries janet_c))
