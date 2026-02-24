@@ -1,18 +1,20 @@
 let () =
-  let rc = Janet_ml.C.Functions.janet_init () in
-  if rc <> 0 then failwith "janet_init failed";
-  Printf.printf "Janet version: %d.%d.%d\n"
-    Janet_ml.C.Types.janet_version_major
-    Janet_ml.C.Types.janet_version_minor
-    Janet_ml.C.Types.janet_version_patch;
-  Janet_ml.C.Functions.janet_deinit ()
-
-
-let () =
   let module F = Janet_ml.C.Functions in
-  let _ = Janet_ml.C.Functions.janet_init () in
-  let env = Janet_ml.C.Functions.janet_core_env None in
-  let out = Janet_ml.C.Types.janet in
-  F.janet_dostring env "(print `hello, world!`)" ( Some "main") (Some out) |> ignore;
+  let module T = Janet_ml.C.Types in
+  let rc = F.janet_init () in
+  if rc <> 0 then failwith "janet_init failed";
+  Printf.printf
+    "Janet version: %d.%d.%d\n"
+    T.janet_version_major
+    T.janet_version_minor
+    T.janet_version_patch;
+  let env = F.janet_core_env None in
+  let out = Ctypes.allocate_n T.janet ~count:1 in
+  let _ = F.janet_dostring env "(+ 1 2)" (Some "main") (Some out) in
+  let result = Ctypes.(!@out) in
+  (match F.janet_type result with
+   | T.Number -> Printf.printf "Result: %f\n" (F.janet_unwrap_number result)
+   | T.Nil -> Printf.printf "Result: nil\n"
+   | _ -> Printf.printf "Result: <other type>\n");
   F.janet_deinit ()
-  
+;;
