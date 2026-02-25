@@ -1,6 +1,5 @@
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
-open Janet_types
 
 let janet_init () =
   match F.janet_init () with
@@ -13,7 +12,7 @@ let janet_core_env (replacements : Janet_table.t option) : Janet_table.t =
 ;;
 
 let janet_dostring (env : Janet_table.t) (str : string) (source_path : string option)
-  : janet
+  : Janet.t
   =
   let out = Ctypes.allocate_n T.janet ~count:1 in
   let _ = F.janet_dostring env str source_path (Some out) in
@@ -21,7 +20,7 @@ let janet_dostring (env : Janet_table.t) (str : string) (source_path : string op
 ;;
 
 let janet_dobytes (env : Janet_table.t) (bytes : bytes) (source_path : string option)
-  : janet
+  : Janet.t
   =
   let len = Bytes.length bytes in
   let c_arr = Ctypes.CArray.make Ctypes.uint8_t len in
@@ -54,16 +53,16 @@ module Janet_type = struct
     | Array of t list
     | Tuple of t list
     | Table of Janet_table.t
-    | Struct of janet_struct
+    | Struct of Janet_struct.t
     | Buffer of bytes
-    | Function of janet_function
-    | CFunction of janet_cfunction
-    | Abstract of janet_abstract
-    | Pointer of janet_pointer
+    | Function of Janet_function.t
+    | CFunction of Janet_cfunction.t
+    | Abstract of Janet_abstract.t
+    | Pointer of Janet_pointer.t
 
-  let check_type (janet : janet) = F.janet_type janet
+  let check_type (janet : Janet.t) = F.janet_type janet
 
-  let rec of_janet (janet : janet) =
+  let rec of_janet (janet : Janet.t) =
     match F.janet_type janet with
     | T.Number -> Number (F.janet_unwrap_number janet)
     | T.Nil -> Nil

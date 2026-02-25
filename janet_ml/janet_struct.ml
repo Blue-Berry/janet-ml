@@ -1,6 +1,5 @@
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
-open Janet_types
 
 type t = [ `janet_struct_head ] Ctypes.structure Ctypes_static.ptr
 
@@ -21,22 +20,25 @@ let head_of_data (d : [ `janet_kv ] Ctypes.structure Ctypes_static.ptr) : t =
 (* Builder API *)
 let begin_ count : t = head_of_data (F.janet_struct_begin (Int32.of_int count))
 
-let put (st : t) (key : janet) (value : janet) =
+let put (st : t) (key : Janet.t) (value : Janet.t) =
   F.janet_struct_put (data_of_head st) key value
 ;;
 
 let end_ (st : t) : t = head_of_data (F.janet_struct_end (data_of_head st))
 
 (* Lookup *)
-let get (st : t) (key : janet) : janet = F.janet_struct_get (data_of_head st) key
-let rawget (st : t) (key : janet) : janet = F.janet_struct_rawget (data_of_head st) key
+let get (st : t) (key : Janet.t) : Janet.t = F.janet_struct_get (data_of_head st) key
+
+let rawget (st : t) (key : Janet.t) : Janet.t =
+  F.janet_struct_rawget (data_of_head st) key
+;;
 
 (* Conversion *)
 let to_table (st : t) : [ `janet_table ] Ctypes.structure Ctypes_static.ptr =
   F.janet_struct_to_table (data_of_head st)
 ;;
 
-let find (st : t) (key : janet) : [ `janet_kv ] Ctypes.structure Ctypes_static.ptr =
+let find (st : t) (key : Janet.t) : [ `janet_kv ] Ctypes.structure Ctypes_static.ptr =
   F.janet_struct_find (data_of_head st) key
 ;;
 
@@ -56,10 +58,10 @@ let proto (st : t) : [ `janet_kv ] Ctypes.structure Ctypes_static.ptr =
 ;;
 
 (* Wrap/unwrap convert between head pointer and Janet value *)
-let wrap (st : t) : janet = F.janet_wrap_struct (data_of_head st)
-let unwrap (j : janet) : t = head_of_data (F.janet_unwrap_struct j)
+let wrap (st : t) : Janet.t = F.janet_wrap_struct (data_of_head st)
+let unwrap (j : Janet.t) : t = head_of_data (F.janet_unwrap_struct j)
 
-let of_pairs (pairs : (janet * janet) list) : t =
+let of_pairs (pairs : (Janet.t * Janet.t) list) : t =
   let st = begin_ (List.length pairs) in
   List.iter (fun (k, v) -> put st k v) pairs;
   end_ st

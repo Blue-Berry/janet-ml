@@ -1,6 +1,5 @@
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
-open Janet_types
 
 type t = [ `janet_fiber ] Ctypes.structure Ctypes_static.ptr
 
@@ -13,7 +12,7 @@ type status =
   | Alive
   | User of int
 
-let create (callee : janet_function) ~capacity ~(argv : janet list) : t =
+let create (callee : Janet_function.t) ~capacity ~(argv : Janet.t list) : t =
   let argc = List.length argv in
   let c_arr = Ctypes.CArray.of_list T.janet argv in
   F.janet_fiber
@@ -23,7 +22,7 @@ let create (callee : janet_function) ~capacity ~(argv : janet list) : t =
     (Ctypes.CArray.start c_arr)
 ;;
 
-let reset (fiber : t) (callee : janet_function) ~(argv : janet list) : t =
+let reset (fiber : t) (callee : Janet_function.t) ~(argv : Janet.t list) : t =
   let argc = List.length argv in
   let c_arr = Ctypes.CArray.of_list T.janet argv in
   F.janet_fiber_reset fiber callee (Int32.of_int argc) (Ctypes.CArray.start c_arr)
@@ -50,5 +49,5 @@ let status (fiber : t) : status =
 ;;
 
 let current () : t = F.janet_current_fiber ()
-let wrap (fiber : t) : janet = F.janet_wrap_fiber fiber
-let unwrap (j : janet) : t = F.janet_unwrap_fiber j
+let wrap (fiber : t) : Janet.t = F.janet_wrap_fiber fiber
+let unwrap (j : Janet.t) : t = F.janet_unwrap_fiber j

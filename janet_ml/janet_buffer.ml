@@ -44,5 +44,5 @@ let contents (buf : t) : bytes =
 ;;
 
 let to_string (buf : t) : string = contents buf |> Bytes.to_string
-let wrap (buf : t) : Janet_types.janet = F.janet_wrap_buffer buf
-let unwrap (j : Janet_types.janet) : t = F.janet_unwrap_buffer j
+let wrap (buf : t) : Janet.t = F.janet_wrap_buffer buf
+let unwrap (j : Janet.t) : t = F.janet_unwrap_buffer j
