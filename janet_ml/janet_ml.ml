@@ -14,9 +14,9 @@ let janet_core_env (replacements : Janet_table.t option) : Janet_table.t =
 let janet_dostring (env : Janet_table.t) (str : string) (source_path : string option)
   : Janet.t
   =
-  let out = Ctypes.allocate_n T.janet ~count:1 in
+  let out = Janet.create_ptr () in
   let _ = F.janet_dostring env str source_path (Some out) in
-  Ctypes.( !@ ) out
+  Janet.of_ptr out
 ;;
 
 let janet_dobytes (env : Janet_table.t) (bytes : bytes) (source_path : string option)
@@ -27,7 +27,7 @@ let janet_dobytes (env : Janet_table.t) (bytes : bytes) (source_path : string op
   for i = 0 to len - 1 do
     Ctypes.CArray.set c_arr i (Unsigned.UInt8.of_int (Char.code (Bytes.get bytes i)))
   done;
-  let out = Ctypes.allocate_n T.janet ~count:1 in
+  let out = Janet.create_ptr () in
   let _ =
     F.janet_dobytes
       env
@@ -36,10 +36,42 @@ let janet_dobytes (env : Janet_table.t) (bytes : bytes) (source_path : string op
       source_path
       (Some out)
   in
-  Ctypes.( !@ ) out
+  Janet.of_ptr out
 ;;
 
 let janet_deinit = F.janet_deinit
+
+let pcall
+      (f : Janet_function.t)
+      (args : Janet.t list)
+      ?(fiber : Janet_fiber.t option = None)
+      ()
+  =
+  let argn = Int32.of_int (List.length args) in
+  let argv = Ctypes.CArray.of_list T.janet args |> Ctypes.CArray.start in
+  let out = Janet.create_ptr () in
+  let fiber = Option.map (Ctypes.allocate (Ctypes.ptr T.Janet_Fiber.t)) fiber in
+  let signal = F.janet_pcall f argn argv out fiber in
+  signal, Janet.of_ptr out
+;;
+
+let pcall (f : Janet_function.t) (args : Janet.t list) : Janet.t =
+  let argn = Int32.of_int (List.length args) in
+  let argv = Ctypes.CArray.of_list T.janet args |> Ctypes.CArray.start in
+  F.janet_call f argn argv
+;;
+
+let mcall name (args : Janet.t list) =
+  let argn = Int32.of_int (List.length args) in
+  let argv = Ctypes.CArray.of_list T.janet args |> Ctypes.CArray.start in
+  F.janet_mcall name argn argv
+;;
+
+let stacktrace (fiber : Janet_fiber.t) (err : Janet.t) = F.janet_stacktrace fiber err
+
+let stacktrace (fiber : Janet_fiber.t) (err : Janet.t) (prefix : string) =
+  F.janet_stacktrace_ext fiber err prefix
+;;
 
 module Janet_type = struct
   type t =

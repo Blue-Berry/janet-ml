@@ -56,7 +56,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
        @-> int32_t
        @-> ptr janet
        @-> ptr janet
-       @-> ptr (ptr janet_fiber_s)
+       @-> ptr_opt (ptr janet_fiber_s)
        @-> returning Types.janet_signal_enum)
   ;;
 

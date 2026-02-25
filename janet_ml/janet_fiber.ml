@@ -12,6 +12,8 @@ type status =
   | Alive
   | User of int
 
+type janet_signal = T.janet_signal
+
 let create (callee : Janet_function.t) ~capacity ~(argv : Janet.t list) : t =
   let argc = List.length argv in
   let c_arr = Ctypes.CArray.of_list T.janet argv in
@@ -51,3 +53,24 @@ let status (fiber : t) : status =
 let current () : t = F.janet_current_fiber ()
 let wrap (fiber : t) : Janet.t = F.janet_wrap_fiber fiber
 let unwrap (j : Janet.t) : t = F.janet_unwrap_fiber j
+
+let continue (fiber : t) (janet : Janet.t) : janet_signal * Janet.t =
+  let out = Janet.create_ptr () in
+  let signal = F.janet_continue fiber janet out in
+  signal, Janet.of_ptr out
+;;
+
+let continue_signal (fiber : t) (janet : Janet.t) (signal : janet_signal)
+  : janet_signal * Janet.t
+  =
+  let out = Janet.create_ptr () in
+  let signal = F.janet_continue_signal fiber janet out signal in
+  signal, Janet.of_ptr out
+;;
+
+(* JANET_API JanetSignal janet_step(JanetFiber *fiber, Janet in, Janet *out); *)
+let step (fiber : t) (janet : Janet.t) : janet_signal * Janet.t =
+  let out = Janet.create_ptr () in
+  let signal = F.janet_step fiber janet out in
+  signal, Janet.of_ptr out
+;;
