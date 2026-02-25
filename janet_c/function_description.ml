@@ -27,6 +27,17 @@ module Functions (F : Ctypes.FOREIGN) = struct
       (ptr janet_table_s @-> string @-> string_opt @-> ptr_opt janet @-> returning int)
   ;;
 
+  let janet_dobytes =
+    foreign
+      "janet_dobytes"
+      (ptr janet_table_s
+       @-> ptr uint8_t
+       @-> int32_t
+       @-> string_opt
+       @-> ptr_opt janet
+       @-> returning int)
+  ;;
+
   (* Type inspection *)
   let janet_type = foreign "janet_type" (janet @-> returning Types.janet_type_enum)
 

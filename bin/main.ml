@@ -1,4 +1,3 @@
-
 let () =
   let module F = Janet_c.C.Functions in
   let module T = Janet_c.C.Types in

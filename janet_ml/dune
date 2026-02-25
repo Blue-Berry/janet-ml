@@ -1,0 +1,3 @@
+(library
+ (name janet_ml)
+ (libraries janet_c ctypes))
