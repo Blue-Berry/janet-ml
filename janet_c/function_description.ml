@@ -11,10 +11,80 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_buffer_s = Types.Janet_Buffer.t
   let janet_fiber_s = Types.Janet_Fiber.t
   let janet_function_s = Types.janet_function
+  let janet_vm_s = Types.janet_vm
 
   (* Initialization *)
   let janet_init = foreign "janet_init" (void @-> returning int)
   let janet_deinit = foreign "janet_deinit" (void @-> returning void)
+
+  (* VM management *)
+  let janet_vm_alloc = foreign "janet_vm_alloc" (void @-> returning (ptr janet_vm_s))
+  let janet_local_vm = foreign "janet_local_vm" (void @-> returning (ptr janet_vm_s))
+  let janet_vm_free = foreign "janet_vm_free" (ptr janet_vm_s @-> returning void)
+  let janet_vm_save = foreign "janet_vm_save" (ptr janet_vm_s @-> returning void)
+  let janet_vm_load = foreign "janet_vm_load" (ptr janet_vm_s @-> returning void)
+
+  let janet_interpreter_interrupt =
+    foreign "janet_interpreter_interrupt" (ptr janet_vm_s @-> returning void)
+  ;;
+
+  let janet_interpreter_interrupt_handled =
+    foreign "janet_interpreter_interrupt_handled" (ptr janet_vm_s @-> returning void)
+  ;;
+
+  (* Execution *)
+  let janet_continue =
+    foreign
+      "janet_continue"
+      (ptr janet_fiber_s @-> janet @-> ptr janet @-> returning Types.janet_signal_enum)
+  ;;
+
+  let janet_continue_signal =
+    foreign
+      "janet_continue_signal"
+      (ptr janet_fiber_s
+       @-> janet
+       @-> ptr janet
+       @-> Types.janet_signal_enum
+       @-> returning Types.janet_signal_enum)
+  ;;
+
+  let janet_pcall =
+    foreign
+      "janet_pcall"
+      (ptr janet_function_s
+       @-> int32_t
+       @-> ptr janet
+       @-> ptr janet
+       @-> ptr (ptr janet_fiber_s)
+       @-> returning Types.janet_signal_enum)
+  ;;
+
+  let janet_step =
+    foreign
+      "janet_step"
+      (ptr janet_fiber_s @-> janet @-> ptr janet @-> returning Types.janet_signal_enum)
+  ;;
+
+  let janet_call =
+    foreign
+      "janet_call"
+      (ptr janet_function_s @-> int32_t @-> ptr janet @-> returning janet)
+  ;;
+
+  let janet_mcall =
+    foreign "janet_mcall" (string @-> int32_t @-> ptr janet @-> returning janet)
+  ;;
+
+  let janet_stacktrace =
+    foreign "janet_stacktrace" (ptr janet_fiber_s @-> janet @-> returning void)
+  ;;
+
+  let janet_stacktrace_ext =
+    foreign
+      "janet_stacktrace_ext"
+      (ptr janet_fiber_s @-> janet @-> string @-> returning void)
+  ;;
 
   (* Environment *)
   let janet_core_env =
@@ -42,12 +112,23 @@ module Functions (F : Ctypes.FOREIGN) = struct
   (* Type inspection *)
   let janet_type = foreign "janet_type" (janet @-> returning Types.janet_type_enum)
 
+  let janet_checktype =
+    foreign "janet_checktype" (janet @-> Types.janet_type_enum @-> returning int)
+  ;;
+
+  let janet_checktypes = foreign "janet_checktypes" (janet @-> int @-> returning int)
+  let janet_truthy = foreign "janet_truthy" (janet @-> returning int)
+
   (* Wrap functions - create Janet values *)
   let janet_wrap_nil = foreign "janet_wrap_nil" (void @-> returning janet)
   let janet_wrap_number = foreign "janet_wrap_number" (double @-> returning janet)
   let janet_wrap_integer = foreign "janet_wrap_integer" (int32_t @-> returning janet)
+  let janet_wrap_true = foreign "janet_wrap_true" (void @-> returning janet)
+  let janet_wrap_false = foreign "janet_wrap_false" (void @-> returning janet)
   let janet_wrap_boolean = foreign "janet_wrap_boolean" (int @-> returning janet)
   let janet_wrap_string = foreign "janet_wrap_string" (ptr uint8_t @-> returning janet)
+  let janet_wrap_symbol = foreign "janet_wrap_symbol" (ptr uint8_t @-> returning janet)
+  let janet_wrap_keyword = foreign "janet_wrap_keyword" (ptr uint8_t @-> returning janet)
   let janet_wrap_table = foreign "janet_wrap_table" (ptr janet_table_s @-> returning janet)
   let janet_wrap_array = foreign "janet_wrap_array" (ptr janet_array_s @-> returning janet)
 
@@ -62,6 +143,16 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_wrap_function =
     foreign "janet_wrap_function" (ptr janet_function_s @-> returning janet)
   ;;
+
+  let janet_wrap_cfunction =
+    foreign
+      "janet_wrap_cfunction"
+      (static_funptr Ctypes.(int32_t @-> ptr janet @-> returning janet)
+       @-> returning janet)
+  ;;
+
+  let janet_wrap_abstract = foreign "janet_wrap_abstract" (ptr void @-> returning janet)
+  let janet_wrap_pointer = foreign "janet_wrap_pointer" (ptr void @-> returning janet)
 
   (* Unwrap functions - extract values from Janet *)
   let janet_unwrap_number = foreign "janet_unwrap_number" (janet @-> returning double)

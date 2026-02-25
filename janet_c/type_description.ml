@@ -149,6 +149,9 @@ module Types (F : Ctypes.TYPE) = struct
   (* JanetFunction - opaque, only used via pointer *)
   let janet_function : [ `janet_function ] structure typ = structure "JanetFunction"
 
+  (* JanetVM - opaque, only used via pointer *)
+  let janet_vm : [ `janet_vm ] structure typ = structure "JanetVM"
+
   type janet_fiber_status =
     | Status_dead
     | Status_error
