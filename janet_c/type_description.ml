@@ -82,10 +82,109 @@ module Types (F : Ctypes.TYPE) = struct
   let janet_type_field = field janet "type" int
   let () = seal janet
 
-  (* Opaque GC'd types - only used via pointer *)
-  let janet_table : [ `janet_table ] structure typ = structure "JanetTable"
-  let janet_array : [ `janet_array ] structure typ = structure "JanetArray"
-  let janet_buffer : [ `janet_buffer ] structure typ = structure "JanetBuffer"
-  let janet_fiber : [ `janet_fiber ] structure typ = structure "JanetFiber"
+  (* JanetKV - key/value pair used in structs *)
+  let janet_kv : [ `janet_kv ] structure typ = structure "JanetKV"
+  let janet_kv_key = field janet_kv "key" janet
+  let janet_kv_value = field janet_kv "value" janet
+  let () = seal janet_kv
+
+  (* JanetGCObject - GC header embedded in all GC'd types *)
+  let janet_gc_object : [ `janet_gc_object ] structure typ = structure "JanetGCObject"
+  let _janet_gc_flags = field janet_gc_object "flags" int32_t
+  let _janet_gc_data = field janet_gc_object "data" (ptr void)
+  (* union { JanetGCObject *next; volatile int refcount; } *)
+
+  let () = seal janet_gc_object
+
+  module Janet_Array = struct
+    let t : [ `janet_array ] structure typ = structure "JanetArray"
+    let gc = field t "gc" janet_gc_object
+    let count = field t "count" int32_t
+    let capacity = field t "capacity" int32_t
+    let data = field t "data" (ptr janet)
+    let () = seal t
+  end
+
+  module Janet_Buffer = struct
+    let t : [ `janet_buffer ] structure typ = structure "JanetBuffer"
+    let gc = field t "gc" janet_gc_object
+    let count = field t "count" int32_t
+    let capacity = field t "capacity" int32_t
+    let data = field t "data" (ptr uint8_t)
+    let () = seal t
+  end
+
+  (* JanetFunction - opaque, only used via pointer *)
   let janet_function : [ `janet_function ] structure typ = structure "JanetFunction"
+
+  type janet_fiber_status =
+    | Status_dead
+    | Status_error
+    | Status_debug
+    | Status_pending
+    | Status_user0
+    | Status_user1
+    | Status_user2
+    | Status_user3
+    | Status_user4
+    | Status_user5
+    | Status_user6
+    | Status_user7
+    | Status_user8
+    | Status_user9
+    | Status_new
+    | Status_alive
+
+  let janet_fiber_status_enum =
+    enum
+      "JanetFiberStatus"
+      ~typedef:true
+      [ Status_dead, constant "JANET_STATUS_DEAD" int64_t
+      ; Status_error, constant "JANET_STATUS_ERROR" int64_t
+      ; Status_debug, constant "JANET_STATUS_DEBUG" int64_t
+      ; Status_pending, constant "JANET_STATUS_PENDING" int64_t
+      ; Status_user0, constant "JANET_STATUS_USER0" int64_t
+      ; Status_user1, constant "JANET_STATUS_USER1" int64_t
+      ; Status_user2, constant "JANET_STATUS_USER2" int64_t
+      ; Status_user3, constant "JANET_STATUS_USER3" int64_t
+      ; Status_user4, constant "JANET_STATUS_USER4" int64_t
+      ; Status_user5, constant "JANET_STATUS_USER5" int64_t
+      ; Status_user6, constant "JANET_STATUS_USER6" int64_t
+      ; Status_user7, constant "JANET_STATUS_USER7" int64_t
+      ; Status_user8, constant "JANET_STATUS_USER8" int64_t
+      ; Status_user9, constant "JANET_STATUS_USER9" int64_t
+      ; Status_new, constant "JANET_STATUS_NEW" int64_t
+      ; Status_alive, constant "JANET_STATUS_ALIVE" int64_t
+      ]
+  ;;
+
+  module Janet_Fiber = struct
+    let t : [ `janet_fiber ] structure typ = structure "JanetFiber"
+    let gc = field t "gc" janet_gc_object
+    let flags = field t "flags" int32_t
+    let frame = field t "frame" int32_t
+    let stackstart = field t "stackstart" int32_t
+    let stacktop = field t "stacktop" int32_t
+    let capacity = field t "capacity" int32_t
+    let maxstack = field t "maxstack" int32_t
+
+    (* env is JanetTable* but JanetTable is not yet defined;
+       use ptr void to break the circular dependency *)
+    let env = field t "env" (ptr void)
+    let data = field t "data" (ptr janet)
+    let child = field t "child" (ptr_opt t)
+    let last_value = field t "last_value" janet
+    let () = seal t
+  end
+
+  module Janet_Table = struct
+    let t : [ `janet_table ] structure typ = structure "JanetTable"
+    let gc = field t "gc" janet_gc_object
+    let count = field t "count" int32_t
+    let capacity = field t "capacity" int32_t
+    let deleted = field t "deleted" int32_t
+    let data = field t "data" (ptr janet_kv)
+    let proto = field t "proto" (ptr_opt t)
+    let () = seal t
+  end
 end
