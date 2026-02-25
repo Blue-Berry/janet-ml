@@ -55,6 +55,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
     foreign "janet_wrap_buffer" (ptr janet_buffer_s @-> returning janet)
   ;;
 
+  let janet_wrap_tuple = foreign "janet_wrap_tuple" (ptr janet @-> returning janet)
   let janet_wrap_struct = foreign "janet_wrap_struct" (ptr janet_kv_s @-> returning janet)
   let janet_wrap_fiber = foreign "janet_wrap_fiber" (ptr janet_fiber_s @-> returning janet)
 
@@ -161,6 +162,14 @@ module Functions (F : Ctypes.FOREIGN) = struct
 
   let janet_table_find =
     foreign "janet_table_find" (ptr janet_table_s @-> janet @-> returning (ptr janet_kv_s))
+  ;;
+
+  (* Tuple operations - JanetTuple is const Janet * *)
+  let janet_tuple_begin = foreign "janet_tuple_begin" (int32_t @-> returning (ptr janet))
+  let janet_tuple_end = foreign "janet_tuple_end" (ptr janet @-> returning (ptr janet))
+
+  let janet_tuple_n =
+    foreign "janet_tuple_n" (ptr janet @-> int32_t @-> returning (ptr janet))
   ;;
 
   (* Struct operations - JanetStruct is const JanetKV * *)

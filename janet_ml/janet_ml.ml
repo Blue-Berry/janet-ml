@@ -52,7 +52,7 @@ module Janet_type = struct
     | Symbol of string
     | Keyword of string
     | Array of t list
-    | Tuple of (t * t)
+    | Tuple of t list
     | Table of Janet_table.t
     | Struct of janet_struct
     | Buffer of bytes
@@ -91,6 +91,8 @@ module Janet_type = struct
     | T.CFunction -> CFunction (F.janet_unwrap_cfunction janet)
     | T.Abstract -> Abstract (F.janet_unwrap_abstract janet)
     | T.Pointer -> Pointer (F.janet_unwrap_pointer janet)
-    | T.Tuple -> Nil
+    | T.Tuple ->
+      let tup = Janet_tuple.unwrap janet in
+      Tuple (Janet_tuple.to_list tup |> List.map of_janet)
   ;;
 end

@@ -21,14 +21,20 @@ let put (tbl : t) (key : Janet_types.janet) (value : Janet_types.janet) =
   F.janet_table_put tbl key value
 ;;
 
-let to_struct (tbl : t) : [ `janet_kv ] Ctypes.structure Ctypes_static.ptr =
-  F.janet_table_to_struct tbl
+let to_struct (tbl : t) : Janet_types.janet_struct =
+  let data = F.janet_table_to_struct tbl in
+  let offset = Ctypes.sizeof T.Janet_Struct.head in
+  let p = Ctypes.from_voidp Ctypes.char (Ctypes.to_voidp data) in
+  Ctypes.from_voidp T.Janet_Struct.head (Ctypes.to_voidp Ctypes.(p +@ -offset))
 ;;
 
 let merge_table (tbl : t) (other : t) = F.janet_table_merge_table tbl other
 
-let merge_struct (tbl : t) (other : [ `janet_kv ] Ctypes.structure Ctypes_static.ptr) =
-  F.janet_table_merge_struct tbl other
+let merge_struct (tbl : t) (other : Janet_types.janet_struct) =
+  let offset = Ctypes.sizeof T.Janet_Struct.head in
+  let p = Ctypes.from_voidp Ctypes.char (Ctypes.to_voidp other) in
+  let data = Ctypes.from_voidp T.janet_kv (Ctypes.to_voidp Ctypes.(p +@ offset)) in
+  F.janet_table_merge_struct tbl data
 ;;
 
 let find (tbl : t) (key : Janet_types.janet) = F.janet_table_find tbl key

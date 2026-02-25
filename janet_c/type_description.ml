@@ -96,6 +96,38 @@ module Types (F : Ctypes.TYPE) = struct
 
   let () = seal janet_gc_object
 
+  (* Head structs for immutable GC types.
+     The flexible array member "data" is not included in the ctypes struct;
+     sizeof(head) equals offsetof(Head, data), used for pointer arithmetic. *)
+
+  module Janet_Tuple = struct
+    let head : [ `janet_tuple_head ] structure typ = structure "JanetTupleHead"
+    let gc = field head "gc" janet_gc_object
+    let length = field head "length" int32_t
+    let hash = field head "hash" int32_t
+    let sm_line = field head "sm_line" int32_t
+    let sm_column = field head "sm_column" int32_t
+    let () = seal head
+  end
+
+  module Janet_Struct = struct
+    let head : [ `janet_struct_head ] structure typ = structure "JanetStructHead"
+    let gc = field head "gc" janet_gc_object
+    let length = field head "length" int32_t
+    let hash = field head "hash" int32_t
+    let capacity = field head "capacity" int32_t
+    let proto = field head "proto" (ptr janet_kv)
+    let () = seal head
+  end
+
+  module Janet_String = struct
+    let head : [ `janet_string_head ] structure typ = structure "JanetStringHead"
+    let gc = field head "gc" janet_gc_object
+    let length = field head "length" int32_t
+    let hash = field head "hash" int32_t
+    let () = seal head
+  end
+
   module Janet_Array = struct
     let t : [ `janet_array ] structure typ = structure "JanetArray"
     let gc = field t "gc" janet_gc_object
