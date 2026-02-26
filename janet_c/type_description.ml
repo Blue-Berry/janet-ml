@@ -303,4 +303,26 @@ module Types (F : Ctypes.TYPE) = struct
     let status = field t "status" janet_compile_status_enum
     let () = seal t
   end
+
+  (* JanetBindingType enum *)
+  type janet_binding_type =
+    | Binding_none
+    | Binding_def
+    | Binding_var
+    | Binding_macro
+    | Binding_dynamic_def
+    | Binding_dynamic_macro
+
+  let janet_binding_type_enum =
+    enum
+      "JanetBindingType"
+      ~typedef:true
+      [ Binding_none, constant "JANET_BINDING_NONE" int64_t
+      ; Binding_def, constant "JANET_BINDING_DEF" int64_t
+      ; Binding_var, constant "JANET_BINDING_VAR" int64_t
+      ; Binding_macro, constant "JANET_BINDING_MACRO" int64_t
+      ; Binding_dynamic_def, constant "JANET_BINDING_DYNAMIC_DEF" int64_t
+      ; Binding_dynamic_macro, constant "JANET_BINDING_DYNAMIC_MACRO" int64_t
+      ]
+  ;;
 end

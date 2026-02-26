@@ -16,6 +16,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_compile_result_s = Types.Janet_Compile_Result.t
   let janet_abstract_type_s = Types.janet_abstract_type
   let janet_parser_s = Types.Janet_Parser.t
+  let janet_binding_type_enum = Types.janet_binding_type_enum
 
   (* Initialization *)
   let janet_init = foreign "janet_init" (void @-> returning int)
@@ -87,7 +88,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_stacktrace_ext =
     foreign
       "janet_stacktrace_ext"
-      (ptr janet_fiber_s @-> janet @-> string @-> returning void)
+      (ptr janet_fiber_s @-> janet @-> const string @-> returning void)
   ;;
 
   (* Environment *)
@@ -99,14 +100,18 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_dostring =
     foreign
       "janet_dostring"
-      (ptr janet_table_s @-> string @-> string_opt @-> ptr_opt janet @-> returning int)
+      (ptr janet_table_s
+       @-> const string
+       @-> string_opt
+       @-> ptr_opt janet
+       @-> returning int)
   ;;
 
   let janet_dobytes =
     foreign
       "janet_dobytes"
       (ptr janet_table_s
-       @-> ptr uint8_t
+       @-> ptr (const uint8_t)
        @-> int32_t
        @-> string_opt
        @-> ptr_opt janet
@@ -130,9 +135,19 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_wrap_true = foreign "janet_wrap_true" (void @-> returning janet)
   let janet_wrap_false = foreign "janet_wrap_false" (void @-> returning janet)
   let janet_wrap_boolean = foreign "janet_wrap_boolean" (int @-> returning janet)
-  let janet_wrap_string = foreign "janet_wrap_string" (ptr uint8_t @-> returning janet)
-  let janet_wrap_symbol = foreign "janet_wrap_symbol" (ptr uint8_t @-> returning janet)
-  let janet_wrap_keyword = foreign "janet_wrap_keyword" (ptr uint8_t @-> returning janet)
+
+  let janet_wrap_string =
+    foreign "janet_wrap_string" (ptr (const uint8_t) @-> returning janet)
+  ;;
+
+  let janet_wrap_symbol =
+    foreign "janet_wrap_symbol" (ptr (const uint8_t) @-> returning janet)
+  ;;
+
+  let janet_wrap_keyword =
+    foreign "janet_wrap_keyword" (ptr (const uint8_t) @-> returning janet)
+  ;;
+
   let janet_wrap_table = foreign "janet_wrap_table" (ptr janet_table_s @-> returning janet)
   let janet_wrap_array = foreign "janet_wrap_array" (ptr janet_array_s @-> returning janet)
 
@@ -189,11 +204,13 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_unwrap_keyword = foreign "janet_unwrap_keyword" (janet @-> returning string)
 
   (* JanetTuple is const Janet * *)
-  let janet_unwrap_tuple = foreign "janet_unwrap_tuple" (janet @-> returning (ptr janet))
+  let janet_unwrap_tuple =
+    foreign "janet_unwrap_tuple" (janet @-> returning (ptr (const janet)))
+  ;;
 
   (* JanetStruct is const JanetKV * *)
   let janet_unwrap_struct =
-    foreign "janet_unwrap_struct" (janet @-> returning (ptr janet_kv_s))
+    foreign "janet_unwrap_struct" (janet @-> returning (ptr (const janet_kv_s)))
   ;;
 
   (* JanetAbstract is void *, void *janet_unwrap_pointer *)
@@ -214,10 +231,14 @@ module Functions (F : Ctypes.FOREIGN) = struct
   ;;
 
   (* String operations - JanetString is const uint8_t* *)
-  let janet_cstring = foreign "janet_cstring" (string @-> returning (ptr_opt uint8_t))
+  let janet_cstring =
+    foreign "janet_cstring" (const string @-> returning (ptr_opt (const uint8_t)))
+  ;;
 
   let janet_string =
-    foreign "janet_string" (ptr uint8_t @-> int32_t @-> returning (ptr_opt uint8_t))
+    foreign
+      "janet_string"
+      (const (ptr uint8_t) @-> int32_t @-> returning (ptr_opt (const uint8_t)))
   ;;
 
   (* Table operations *)
@@ -240,7 +261,9 @@ module Functions (F : Ctypes.FOREIGN) = struct
   ;;
 
   let janet_table_to_struct =
-    foreign "janet_table_to_struct" (ptr janet_table_s @-> returning (ptr janet_kv_s))
+    foreign
+      "janet_table_to_struct"
+      (ptr janet_table_s @-> returning (ptr (const janet_kv_s)))
   ;;
 
   let janet_table_merge_table =
@@ -252,7 +275,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_table_merge_struct =
     foreign
       "janet_table_merge_struct"
-      (ptr janet_table_s @-> ptr janet_kv_s @-> returning void)
+      (ptr janet_table_s @-> ptr (const janet_kv_s) @-> returning void)
   ;;
 
   let janet_table_find =
@@ -261,10 +284,15 @@ module Functions (F : Ctypes.FOREIGN) = struct
 
   (* Tuple operations - JanetTuple is const Janet * *)
   let janet_tuple_begin = foreign "janet_tuple_begin" (int32_t @-> returning (ptr janet))
-  let janet_tuple_end = foreign "janet_tuple_end" (ptr janet @-> returning (ptr janet))
+
+  let janet_tuple_end =
+    foreign "janet_tuple_end" (ptr janet @-> returning (ptr (const janet)))
+  ;;
 
   let janet_tuple_n =
-    foreign "janet_tuple_n" (ptr janet @-> int32_t @-> returning (ptr janet))
+    foreign
+      "janet_tuple_n"
+      (ptr (const janet) @-> int32_t @-> returning (ptr (const janet)))
   ;;
 
   (* Struct operations - JanetStruct is const JanetKV * *)
@@ -277,23 +305,27 @@ module Functions (F : Ctypes.FOREIGN) = struct
   ;;
 
   let janet_struct_end =
-    foreign "janet_struct_end" (ptr janet_kv_s @-> returning (ptr janet_kv_s))
+    foreign "janet_struct_end" (ptr janet_kv_s @-> returning (ptr (const janet_kv_s)))
   ;;
 
   let janet_struct_get =
-    foreign "janet_struct_get" (ptr janet_kv_s @-> janet @-> returning janet)
+    foreign "janet_struct_get" (ptr (const janet_kv_s) @-> janet @-> returning janet)
   ;;
 
   let janet_struct_rawget =
-    foreign "janet_struct_rawget" (ptr janet_kv_s @-> janet @-> returning janet)
+    foreign "janet_struct_rawget" (ptr (const janet_kv_s) @-> janet @-> returning janet)
   ;;
 
   let janet_struct_to_table =
-    foreign "janet_struct_to_table" (ptr janet_kv_s @-> returning (ptr janet_table_s))
+    foreign
+      "janet_struct_to_table"
+      (ptr (const janet_kv_s) @-> returning (ptr janet_table_s))
   ;;
 
   let janet_struct_find =
-    foreign "janet_struct_find" (ptr janet_kv_s @-> janet @-> returning (ptr janet_kv_s))
+    foreign
+      "janet_struct_find"
+      (ptr (const janet_kv_s) @-> janet @-> returning (ptr (const janet_kv_s)))
   ;;
 
   (* Array operations *)
@@ -336,17 +368,19 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_buffer_push_bytes =
     foreign
       "janet_buffer_push_bytes"
-      (ptr janet_buffer_s @-> ptr uint8_t @-> int32_t @-> returning void)
+      (ptr janet_buffer_s @-> ptr (const uint8_t) @-> int32_t @-> returning void)
   ;;
 
   let janet_buffer_push_string =
     foreign
       "janet_buffer_push_string"
-      (ptr janet_buffer_s @-> ptr uint8_t @-> returning void)
+      (ptr janet_buffer_s @-> ptr (const uint8_t) @-> returning void)
   ;;
 
   let janet_buffer_push_cstring =
-    foreign "janet_buffer_push_cstring" (ptr janet_buffer_s @-> string @-> returning void)
+    foreign
+      "janet_buffer_push_cstring"
+      (ptr janet_buffer_s @-> const string @-> returning void)
   ;;
 
   let janet_buffer_push_u8 =
@@ -400,7 +434,10 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_compile =
     foreign
       "janet_compile"
-      (janet @-> ptr janet_table_s @-> ptr uint8_t @-> returning janet_compile_result_s)
+      (janet
+       @-> ptr janet_table_s
+       @-> ptr (const uint8_t)
+       @-> returning janet_compile_result_s)
   ;;
 
   let janet_compile_lint =
@@ -408,7 +445,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
       "janet_compile_lint"
       (janet
        @-> ptr janet_table_s
-       @-> ptr uint8_t
+       @-> ptr (const uint8_t)
        @-> ptr janet_array_s
        @-> returning janet_compile_result_s)
   ;;
@@ -425,7 +462,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
   ;;
 
   (* Parser type descriptor *)
-  let janet_parser_type = foreign_value "janet_parser_type" janet_abstract_type_s
+  let janet_parser_type = foreign_value "janet_parser_type" (const janet_abstract_type_s)
 
   (* Parser operations *)
   let janet_parser_init =
@@ -474,4 +511,444 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_length = foreign "janet_length" (janet @-> returning int32_t)
   let janet_get = foreign "janet_get" (janet @-> janet @-> returning janet)
   let janet_put = foreign "janet_put" (janet @-> janet @-> janet @-> returning void)
+
+  (* Marshalling *)
+  let janet_marshal =
+    foreign
+      "janet_marshal"
+      (ptr janet_buffer_s @-> janet @-> ptr_opt janet_table_s @-> int @-> returning void)
+  ;;
+
+  let janet_unmarshal =
+    foreign
+      "janet_unmarshal"
+      (ptr (const uint8_t)
+       @-> size_t
+       @-> int
+       @-> ptr_opt janet_table_s
+       @-> ptr_opt (ptr (const uint8_t))
+       @-> returning janet)
+  ;;
+
+  let janet_env_lookup =
+    foreign "janet_env_lookup" (ptr janet_table_s @-> returning (ptr janet_table_s))
+  ;;
+
+  (* Arity checking *)
+  let janet_arity =
+    foreign "janet_arity" (int32_t @-> int32_t @-> int32_t @-> returning void)
+  ;;
+
+  let janet_fixarity = foreign "janet_fixarity" (int32_t @-> int32_t @-> returning void)
+
+  (* Symbol/resolve *)
+  let janet_csymbol =
+    foreign "janet_csymbol" (const string @-> returning (ptr (const uint8_t)))
+  ;;
+
+  let janet_def =
+    foreign
+      "janet_def"
+      (ptr janet_table_s @-> const string @-> janet @-> string_opt @-> returning void)
+  ;;
+
+  let janet_var =
+    foreign
+      "janet_var"
+      (ptr janet_table_s @-> const string @-> janet @-> string_opt @-> returning void)
+  ;;
+
+  let janet_resolve =
+    foreign
+      "janet_resolve"
+      (ptr janet_table_s
+       @-> ptr (const uint8_t)
+       @-> ptr janet
+       @-> returning janet_binding_type_enum)
+  ;;
+
+  (* TODO: Remaining JANET_API functions to bind
+   *
+   * -- Abstract types --
+   * janet_abstract_begin
+   * janet_abstract_begin_threaded
+   * janet_abstract_decref
+   * janet_abstract_decref_maybe_free
+   * janet_abstract_end
+   * janet_abstract_end_threaded
+   * janet_abstract_head
+   * janet_abstract_incref
+   * janet_abstract_threaded
+   * janet_checkabstract
+   * janet_get_abstract_type
+   * janet_getabstract
+   * janet_optabstract
+   * janet_register_abstract_type
+   *
+   * -- Array --
+   * janet_array_ensure
+   * janet_array_n
+   * janet_array_setcount
+   * janet_array_weak
+   *
+   * -- Assembly --
+   * janet_asm
+   * janet_asm_decode_instruction
+   * janet_disasm
+   *
+   * -- Async / Event loop --
+   * janet_async_end
+   * janet_async_in_flight
+   * janet_async_start
+   * janet_async_start_fiber
+   * janet_await
+   * janet_sleep_await
+   * janet_addtimeout
+   * janet_addtimeout_nil
+   * janet_ev_dec_refcount
+   * janet_ev_default_threaded_callback
+   * janet_ev_inc_refcount
+   * janet_ev_lasterr
+   * janet_ev_post_event
+   * janet_ev_read
+   * janet_ev_readchunk
+   * janet_ev_recv
+   * janet_ev_recvchunk
+   * janet_ev_recvfrom
+   * janet_ev_send_buffer
+   * janet_ev_send_string
+   * janet_ev_sendto_buffer
+   * janet_ev_sendto_string
+   * janet_ev_threaded_await
+   * janet_ev_threaded_call
+   * janet_ev_write_buffer
+   * janet_ev_write_string
+   * janet_loop
+   * janet_loop1
+   * janet_loop1_interrupt
+   * janet_loop_done
+   * janet_loop_fiber
+   * janet_schedule
+   * janet_schedule_signal
+   * janet_schedule_soon
+   *
+   * -- Atomic --
+   * janet_atomic_dec
+   * janet_atomic_inc
+   * janet_atomic_load
+   * janet_atomic_load_relaxed
+   *
+   * -- Cancel / Signal --
+   * janet_cancel
+   * janet_signalv
+   *
+   * -- C function registration --
+   * janet_cfuns
+   * janet_cfuns_ext
+   * janet_cfuns_ext_prefix
+   * janet_cfuns_prefix
+   *
+   * -- Channels --
+   * janet_channel_give
+   * janet_channel_make
+   * janet_channel_make_threaded
+   * janet_channel_take
+   *
+   * -- Type checking (get/opt from argv) --
+   * janet_checkfile
+   * janet_checkint
+   * janet_checkint16
+   * janet_checkint64
+   * janet_checksize
+   * janet_checkuint
+   * janet_checkuint16
+   * janet_checkuint64
+   * janet_getargindex
+   * janet_getarray
+   * janet_getboolean
+   * janet_getbuffer
+   * janet_getbytes
+   * janet_getcbytes
+   * janet_getcfunction
+   * janet_getchannel
+   * janet_getcstring
+   * janet_getdictionary
+   * janet_getendrange
+   * janet_getfiber
+   * janet_getfile
+   * janet_getflags
+   * janet_getfunction
+   * janet_gethalfrange
+   * janet_getindex
+   * janet_getindexed
+   * janet_getinteger
+   * janet_getinteger16
+   * janet_getinteger64
+   * janet_getjfile
+   * janet_getkeyword
+   * janet_getmethod
+   * janet_getnat
+   * janet_getnumber
+   * janet_getpointer
+   * janet_getsize
+   * janet_getslice
+   * janet_getstartrange
+   * janet_getstring
+   * janet_getstruct
+   * janet_getsymbol
+   * janet_gettable
+   * janet_gettuple
+   * janet_getuinteger
+   * janet_getuinteger16
+   * janet_getuinteger64
+   * janet_optarray
+   * janet_optboolean
+   * janet_optbuffer
+   * janet_optcbytes
+   * janet_optcfunction
+   * janet_optchannel
+   * janet_optcstring
+   * janet_optfiber
+   * janet_optfunction
+   * janet_optinteger
+   * janet_optinteger64
+   * janet_optkeyword
+   * janet_optnat
+   * janet_optnumber
+   * janet_optpointer
+   * janet_optsize
+   * janet_optstring
+   * janet_optstruct
+   * janet_optsymbol
+   * janet_opttable
+   * janet_opttuple
+   * janet_optuinteger
+   * janet_optuinteger64
+   *
+   * -- Comparison / Hashing --
+   * janet_compare
+   * janet_hash
+   * janet_keyeq
+   * janet_streq
+   * janet_symeq
+   * janet_is_int
+   *
+   * -- Debug --
+   * janet_debug_break
+   * janet_debug_find
+   * janet_debug_unbreak
+   *
+   * -- Dictionary (generic) --
+   * janet_dictionary_get
+   * janet_dictionary_next
+   * janet_dictionary_view
+   *
+   * -- Dynamic bindings --
+   * janet_dyn
+   * janet_dynfile
+   * janet_dynprintf
+   * janet_setdyn
+   *
+   * -- Environment --
+   * janet_core_lookup_table
+   * janet_def_sm
+   * janet_env_lookup_into
+   * janet_register
+   * janet_resolve_core
+   * janet_var_sm
+   *
+   * -- Fiber --
+   * janet_fiber_can_resume
+   * janet_restore
+   * janet_root_fiber
+   *
+   * -- File --
+   * janet_file_close
+   * janet_makefile
+   * janet_makejfile
+   * janet_unwrapfile
+   *
+   * -- Formatting --
+   * janet_description
+   * janet_description_b
+   * janet_formatb
+   * janet_formatbv
+   * janet_formatc
+   * janet_pretty
+   * janet_to_string
+   * janet_to_string_b
+   *
+   * -- Funcdef --
+   * janet_funcdef_alloc
+   * janet_thunk_delay
+   * janet_verify
+   *
+   * -- GC --
+   * janet_clear_memory
+   * janet_gclock
+   * janet_gcpressure
+   * janet_gcunlock
+   * janet_gcunrootall
+   * janet_mark
+   * janet_sweep
+   *
+   * -- Indexed (generic) --
+   * janet_bytes_view
+   * janet_in
+   * janet_indexed_view
+   * janet_lengthv
+   * janet_next
+   * janet_nextmethod
+   * janet_putindex
+   *
+   * -- Marshal helpers --
+   * janet_marshal_abstract
+   * janet_marshal_byte
+   * janet_marshal_bytes
+   * janet_marshal_int
+   * janet_marshal_int64
+   * janet_marshal_janet
+   * janet_marshal_ptr
+   * janet_marshal_size
+   * janet_unmarshal_abstract
+   * janet_unmarshal_abstract_reuse
+   * janet_unmarshal_abstract_threaded
+   * janet_unmarshal_byte
+   * janet_unmarshal_bytes
+   * janet_unmarshal_ensure
+   * janet_unmarshal_int
+   * janet_unmarshal_int64
+   * janet_unmarshal_janet
+   * janet_unmarshal_ptr
+   * janet_unmarshal_size
+   *
+   * -- Memory allocation --
+   * janet_calloc
+   * janet_free
+   * janet_malloc
+   * janet_realloc
+   * janet_scalloc
+   * janet_sfinalizer
+   * janet_sfree
+   * janet_smalloc
+   * janet_srealloc
+   *
+   * -- Mutex / RWLock --
+   * janet_os_mutex_deinit
+   * janet_os_mutex_init
+   * janet_os_mutex_lock
+   * janet_os_mutex_size
+   * janet_os_mutex_unlock
+   * janet_os_rwlock_deinit
+   * janet_os_rwlock_init
+   * janet_os_rwlock_rlock
+   * janet_os_rwlock_runlock
+   * janet_os_rwlock_size
+   * janet_os_rwlock_wlock
+   * janet_os_rwlock_wunlock
+   *
+   * -- Nanbox internals --
+   * janet_nanbox32_from_tagi
+   * janet_nanbox32_from_tagp
+   * janet_nanbox_from_bits
+   * janet_nanbox_from_cpointer
+   * janet_nanbox_from_double
+   * janet_nanbox_from_pointer
+   * janet_nanbox_to_pointer
+   *
+   * -- Native modules --
+   * janet_native
+   *
+   * -- Panic --
+   * janet_panic
+   * janet_panic_abstract
+   * janet_panic_type
+   * janet_panicf
+   * janet_panics
+   * janet_panicv
+   *
+   * -- Parser --
+   * janet_parser_produce_wrapped
+   *
+   * -- Pointer / Buffer --
+   * janet_pointer_buffer_unsafe
+   *
+   * -- RNG --
+   * janet_cryptorand
+   * janet_default_rng
+   * janet_rng_double
+   * janet_rng_longseed
+   * janet_rng_seed
+   * janet_rng_u32
+   *
+   * -- Sandbox --
+   * janet_sandbox
+   * janet_sandbox_assert
+   *
+   * -- Scanning --
+   * janet_scan_int64
+   * janet_scan_number
+   * janet_scan_number_base
+   * janet_scan_numeric
+   * janet_scan_uint64
+   *
+   * -- Sorted keys --
+   * janet_sorted_keys
+   *
+   * -- Stream --
+   * janet_cfun_stream_chunk
+   * janet_cfun_stream_close
+   * janet_cfun_stream_read
+   * janet_cfun_stream_write
+   * janet_stream
+   * janet_stream_close
+   * janet_stream_edge_triggered
+   * janet_stream_ext
+   * janet_stream_flags
+   * janet_stream_level_triggered
+   *
+   * -- String --
+   * janet_cstrcmp
+   * janet_string_begin
+   * janet_string_compare
+   * janet_string_end
+   * janet_string_equal
+   * janet_string_equalconst
+   * janet_string_head
+   * janet_symbol
+   * janet_symbol_gen
+   *
+   * -- Struct --
+   * janet_struct_get_ex
+   * janet_struct_head
+   *
+   * -- Table --
+   * janet_table_clear
+   * janet_table_clone
+   * janet_table_deinit
+   * janet_table_get_ex
+   * janet_table_init
+   * janet_table_init_raw
+   * janet_table_weakk
+   * janet_table_weakkv
+   * janet_table_weakv
+   *
+   * -- Try --
+   * janet_try_init
+   *
+   * -- Tuple --
+   * janet_tuple_head
+   *
+   * -- Unwrap extras --
+   * janet_unwrap_s64
+   * janet_unwrap_u64
+   *
+   * -- Wrap extras --
+   * janet_wrap_number_safe
+   * janet_wrap_s64
+   * janet_wrap_u64
+   *
+   * -- Hash key init --
+   * janet_init_hash_key
+   *)
 end
