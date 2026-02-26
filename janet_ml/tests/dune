@@ -1,0 +1,6 @@
+(library
+ (name janet_ml_test)
+ (libraries janet_ml)
+ (inline_tests)
+ (preprocess
+  (pps ppx_jane)))

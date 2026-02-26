@@ -12,6 +12,10 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_fiber_s = Types.Janet_Fiber.t
   let janet_function_s = Types.janet_function
   let janet_vm_s = Types.janet_vm
+  let janet_funcdef_s = Types.janet_funcdef
+  let janet_compile_result_s = Types.Janet_Compile_Result.t
+  let janet_abstract_type_s = Types.janet_abstract_type
+  let janet_parser_s = Types.Janet_Parser.t
 
   (* Initialization *)
   let janet_init = foreign "janet_init" (void @-> returning int)
@@ -390,6 +394,74 @@ module Functions (F : Ctypes.FOREIGN) = struct
 
   let janet_current_fiber =
     foreign "janet_current_fiber" (void @-> returning (ptr janet_fiber_s))
+  ;;
+
+  (* Compilation *)
+  let janet_compile =
+    foreign
+      "janet_compile"
+      (janet @-> ptr janet_table_s @-> ptr uint8_t @-> returning janet_compile_result_s)
+  ;;
+
+  let janet_compile_lint =
+    foreign
+      "janet_compile_lint"
+      (janet
+       @-> ptr janet_table_s
+       @-> ptr uint8_t
+       @-> ptr janet_array_s
+       @-> returning janet_compile_result_s)
+  ;;
+
+  let janet_thunk =
+    foreign "janet_thunk" (ptr janet_funcdef_s @-> returning (ptr janet_function_s))
+  ;;
+
+  (* Abstract type allocation *)
+  let janet_abstract =
+    foreign
+      "janet_abstract"
+      (ptr janet_abstract_type_s @-> size_t @-> returning (ptr void))
+  ;;
+
+  (* Parser type descriptor *)
+  let janet_parser_type = foreign_value "janet_parser_type" janet_abstract_type_s
+
+  (* Parser operations *)
+  let janet_parser_init =
+    foreign "janet_parser_init" (ptr janet_parser_s @-> returning void)
+  ;;
+
+  let janet_parser_deinit =
+    foreign "janet_parser_deinit" (ptr janet_parser_s @-> returning void)
+  ;;
+
+  let janet_parser_consume =
+    foreign "janet_parser_consume" (ptr janet_parser_s @-> uint8_t @-> returning void)
+  ;;
+
+  let janet_parser_status =
+    foreign
+      "janet_parser_status"
+      (ptr janet_parser_s @-> returning Types.janet_parser_status_enum)
+  ;;
+
+  let janet_parser_produce =
+    foreign "janet_parser_produce" (ptr janet_parser_s @-> returning janet)
+  ;;
+
+  let janet_parser_has_more =
+    foreign "janet_parser_has_more" (ptr janet_parser_s @-> returning int)
+  ;;
+
+  let janet_parser_error =
+    foreign "janet_parser_error" (ptr janet_parser_s @-> returning string_opt)
+  ;;
+
+  let janet_parser_eof = foreign "janet_parser_eof" (ptr janet_parser_s @-> returning void)
+
+  let janet_parser_flush =
+    foreign "janet_parser_flush" (ptr janet_parser_s @-> returning void)
   ;;
 
   (* GC *)

@@ -1,9 +1,11 @@
+open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
 type t = [ `janet_table ] Ctypes.structure Ctypes_static.ptr
 
-let create capacity : t = F.janet_table (Int32.of_int capacity)
+let sexp_of_t _ = Sexp.of_string "janet_table"
+let create capacity : t = F.janet_table (Int32.of_int_exn capacity)
 let get (tbl : t) (key : Janet.t) : Janet.t = F.janet_table_get tbl key
 let rawget (tbl : t) (key : Janet.t) : Janet.t = F.janet_table_rawget tbl key
 let remove (tbl : t) (key : Janet.t) : Janet.t = F.janet_table_remove tbl key

@@ -1,5 +1,10 @@
+open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
+module Janet_compile = Janet_compile
+module Janet_parser = Janet_parser
+module Janet_table = Janet_table
+module Janet_fiber = Janet_fiber
 
 let janet_init () =
   match F.janet_init () with
@@ -11,7 +16,7 @@ let janet_core_env (replacements : Janet_table.t option) : Janet_table.t =
   F.janet_core_env replacements
 ;;
 
-let janet_dostring (env : Janet_table.t) (str : string) (source_path : string option)
+let janet_dostring ~(env : Janet_table.t) (str : string) ~(source_path : string option)
   : Janet.t
   =
   let out = Janet.create_ptr () in
@@ -25,14 +30,17 @@ let janet_dobytes (env : Janet_table.t) (bytes : bytes) (source_path : string op
   let len = Bytes.length bytes in
   let c_arr = Ctypes.CArray.make Ctypes.uint8_t len in
   for i = 0 to len - 1 do
-    Ctypes.CArray.set c_arr i (Unsigned.UInt8.of_int (Char.code (Bytes.get bytes i)))
+    Ctypes.CArray.set
+      c_arr
+      i
+      (Unsigned.UInt8.of_int (Stdlib.Char.code (Bytes.get bytes i)))
   done;
   let out = Janet.create_ptr () in
   let _ =
     F.janet_dobytes
       env
       (Ctypes.CArray.start c_arr)
-      (Int32.of_int len)
+      (Int32.of_int_exn len)
       source_path
       (Some out)
   in
@@ -47,22 +55,22 @@ let pcall
       ?(fiber : Janet_fiber.t option = None)
       ()
   =
-  let argn = Int32.of_int (List.length args) in
+  let argn = Int32.of_int_exn (List.length args) in
   let argv = Ctypes.CArray.of_list T.janet args |> Ctypes.CArray.start in
   let out = Janet.create_ptr () in
-  let fiber = Option.map (Ctypes.allocate (Ctypes.ptr T.Janet_Fiber.t)) fiber in
+  let fiber = Option.map ~f:(Ctypes.allocate (Ctypes.ptr T.Janet_Fiber.t)) fiber in
   let signal = F.janet_pcall f argn argv out fiber in
   signal, Janet.of_ptr out
 ;;
 
 let pcall (f : Janet_function.t) (args : Janet.t list) : Janet.t =
-  let argn = Int32.of_int (List.length args) in
+  let argn = Int32.of_int_exn (List.length args) in
   let argv = Ctypes.CArray.of_list T.janet args |> Ctypes.CArray.start in
   F.janet_call f argn argv
 ;;
 
 let mcall name (args : Janet.t list) =
-  let argn = Int32.of_int (List.length args) in
+  let argn = Int32.of_int_exn (List.length args) in
   let argv = Ctypes.CArray.of_list T.janet args |> Ctypes.CArray.start in
   F.janet_mcall name argn argv
 ;;
@@ -91,6 +99,7 @@ module Janet_type = struct
     | CFunction of Janet_cfunction.t
     | Abstract of Janet_abstract.t
     | Pointer of Janet_pointer.t
+  [@@deriving sexp_of]
 
   let check_type (janet : Janet.t) = F.janet_type janet
 
@@ -98,19 +107,20 @@ module Janet_type = struct
     match F.janet_type janet with
     | T.Number -> Number (F.janet_unwrap_number janet)
     | T.Nil -> Nil
-    | T.Boolean -> Boolean (if F.janet_unwrap_boolean janet == 0 then false else true)
+    | T.Boolean ->
+      Boolean (if phys_equal (F.janet_unwrap_boolean janet) 0 then false else true)
     | T.Fiber -> Fiber (Janet_fiber.unwrap janet)
     | T.String -> String (F.janet_unwrap_string janet)
     | T.Symbol -> Symbol (F.janet_unwrap_symbol janet)
     | T.Keyword -> Keyword (F.janet_unwrap_keyword janet)
     | T.Array ->
       let arr = Ctypes.( !@ ) (F.janet_unwrap_array janet) in
-      let count = Ctypes.getf arr T.Janet_Array.count |> Int32.to_int in
+      let count = Ctypes.getf arr T.Janet_Array.count |> Int32.to_int_exn in
       let data = Ctypes.getf arr T.Janet_Array.data in
       let arr =
         Ctypes.CArray.from_ptr data count
         |> Ctypes.CArray.to_list
-        |> List.map (fun x -> of_janet x)
+        |> List.map ~f:(fun x -> of_janet x)
       in
       Array arr
     | T.Buffer ->
@@ -124,6 +134,6 @@ module Janet_type = struct
     | T.Pointer -> Pointer (F.janet_unwrap_pointer janet)
     | T.Tuple ->
       let tup = Janet_tuple.unwrap janet in
-      Tuple (Janet_tuple.to_list tup |> List.map of_janet)
+      Tuple (Janet_tuple.to_list tup |> List.map ~f:of_janet)
   ;;
 end

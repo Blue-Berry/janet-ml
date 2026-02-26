@@ -1,3 +1,4 @@
+open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
@@ -11,6 +12,7 @@ type status =
   | New
   | Alive
   | User of int
+[@@deriving sexp_of]
 
 type janet_signal = T.janet_signal
 
@@ -19,15 +21,15 @@ let create (callee : Janet_function.t) ~capacity ~(argv : Janet.t list) : t =
   let c_arr = Ctypes.CArray.of_list T.janet argv in
   F.janet_fiber
     callee
-    (Int32.of_int capacity)
-    (Int32.of_int argc)
+    (Int32.of_int_exn capacity)
+    (Int32.of_int_exn argc)
     (Ctypes.CArray.start c_arr)
 ;;
 
 let reset (fiber : t) (callee : Janet_function.t) ~(argv : Janet.t list) : t =
   let argc = List.length argv in
   let c_arr = Ctypes.CArray.of_list T.janet argv in
-  F.janet_fiber_reset fiber callee (Int32.of_int argc) (Ctypes.CArray.start c_arr)
+  F.janet_fiber_reset fiber callee (Int32.of_int_exn argc) (Ctypes.CArray.start c_arr)
 ;;
 
 let status (fiber : t) : status =
@@ -50,6 +52,7 @@ let status (fiber : t) : status =
   | T.Status_user9 -> User 9
 ;;
 
+let sexp_of_t t = status t |> sexp_of_status
 let current () : t = F.janet_current_fiber ()
 let wrap (fiber : t) : Janet.t = F.janet_wrap_fiber fiber
 let unwrap (j : Janet.t) : t = F.janet_unwrap_fiber j
@@ -74,3 +77,5 @@ let step (fiber : t) (janet : Janet.t) : janet_signal * Janet.t =
   let signal = F.janet_step fiber janet out in
   signal, Janet.of_ptr out
 ;;
+
+let set_env (t : t) (env : Janet_table.t) = Ctypes.(setf !@t T.Janet_Fiber.env env)

@@ -1,3 +1,5 @@
 (library
  (name janet_ml)
- (libraries janet_c ctypes))
+ (libraries janet_c ctypes core)
+ (preprocess
+  (pps ppx_jane)))

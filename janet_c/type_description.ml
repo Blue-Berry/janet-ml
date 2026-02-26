@@ -152,6 +152,53 @@ module Types (F : Ctypes.TYPE) = struct
   (* JanetVM - opaque, only used via pointer *)
   let janet_vm : [ `janet_vm ] structure typ = structure "JanetVM"
 
+  (* JanetFuncDef - opaque, only used via pointer *)
+  let janet_funcdef : [ `janet_funcdef ] structure typ = structure "JanetFuncDef"
+
+  (* JanetAbstractType - opaque, only used via pointer *)
+  let janet_abstract_type : [ `janet_abstract_type ] structure typ =
+    structure "JanetAbstractType"
+  ;;
+
+  (* JanetParserStatus enum *)
+  type janet_parser_status =
+    | Parse_root
+    | Parse_error
+    | Parse_pending
+    | Parse_dead
+
+  let janet_parser_status_enum =
+    enum
+      "JanetParserStatus"
+      ~typedef:false
+      [ Parse_root, constant "JANET_PARSE_ROOT" int64_t
+      ; Parse_error, constant "JANET_PARSE_ERROR" int64_t
+      ; Parse_pending, constant "JANET_PARSE_PENDING" int64_t
+      ; Parse_dead, constant "JANET_PARSE_DEAD" int64_t
+      ]
+  ;;
+
+  (* JanetParser struct *)
+  module Janet_Parser = struct
+    let t : [ `janet_parser ] structure typ = structure "JanetParser"
+    let args = field t "args" (ptr janet)
+    let error = field t "error" string_opt
+    let states = field t "states" (ptr void)
+    let buf = field t "buf" (ptr uint8_t)
+    let argcount = field t "argcount" size_t
+    let argcap = field t "argcap" size_t
+    let statecount = field t "statecount" size_t
+    let statecap = field t "statecap" size_t
+    let bufcount = field t "bufcount" size_t
+    let bufcap = field t "bufcap" size_t
+    let line = field t "line" size_t
+    let column = field t "column" size_t
+    let pending = field t "pending" size_t
+    let lookback = field t "lookback" int
+    let flag = field t "flag" int
+    let () = seal t
+  end
+
   type janet_fiber_status =
     | Status_dead
     | Status_error
@@ -193,6 +240,17 @@ module Types (F : Ctypes.TYPE) = struct
       ]
   ;;
 
+  module Janet_Table = struct
+    let t : [ `janet_table ] structure typ = structure "JanetTable"
+    let gc = field t "gc" janet_gc_object
+    let count = field t "count" int32_t
+    let capacity = field t "capacity" int32_t
+    let deleted = field t "deleted" int32_t
+    let data = field t "data" (ptr janet_kv)
+    let proto = field t "proto" (ptr_opt t)
+    let () = seal t
+  end
+
   module Janet_Fiber = struct
     let t : [ `janet_fiber ] structure typ = structure "JanetFiber"
     let gc = field t "gc" janet_gc_object
@@ -205,21 +263,44 @@ module Types (F : Ctypes.TYPE) = struct
 
     (* env is JanetTable* but JanetTable is not yet defined;
        use ptr void to break the circular dependency *)
-    let env = field t "env" (ptr void)
+    let env = field t "env" (ptr Janet_Table.t)
     let data = field t "data" (ptr janet)
     let child = field t "child" (ptr_opt t)
     let last_value = field t "last_value" janet
     let () = seal t
   end
 
-  module Janet_Table = struct
-    let t : [ `janet_table ] structure typ = structure "JanetTable"
-    let gc = field t "gc" janet_gc_object
-    let count = field t "count" int32_t
-    let capacity = field t "capacity" int32_t
-    let deleted = field t "deleted" int32_t
-    let data = field t "data" (ptr janet_kv)
-    let proto = field t "proto" (ptr_opt t)
+  (* JanetSourceMapping *)
+  let janet_source_mapping : [ `janet_source_mapping ] structure typ =
+    structure "JanetSourceMapping"
+  ;;
+
+  let janet_source_mapping_line = field janet_source_mapping "line" int32_t
+  let janet_source_mapping_column = field janet_source_mapping "column" int32_t
+  let () = seal janet_source_mapping
+
+  (* JanetCompileStatus enum *)
+  type janet_compile_status =
+    | Compile_ok
+    | Compile_error
+
+  let janet_compile_status_enum =
+    enum
+      "JanetCompileStatus"
+      ~typedef:false
+      [ Compile_ok, constant "JANET_COMPILE_OK" int64_t
+      ; Compile_error, constant "JANET_COMPILE_ERROR" int64_t
+      ]
+  ;;
+
+  (* JanetCompileResult *)
+  module Janet_Compile_Result = struct
+    let t : [ `janet_compile_result ] structure typ = structure "JanetCompileResult"
+    let funcdef = field t "funcdef" (ptr janet_funcdef)
+    let error = field t "error" (ptr uint8_t)
+    let macrofiber = field t "macrofiber" (ptr Janet_Fiber.t)
+    let error_mapping = field t "error_mapping" janet_source_mapping
+    let status = field t "status" janet_compile_status_enum
     let () = seal t
   end
 end

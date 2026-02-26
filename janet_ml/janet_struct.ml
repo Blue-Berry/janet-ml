@@ -1,7 +1,10 @@
+open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
 type t = [ `janet_struct_head ] Ctypes.structure Ctypes_static.ptr
+
+let sexp_of_t _ = Sexp.of_string "janet_struct"
 
 (* Convert between head pointer and data pointer (the flexible array member).
    sizeof(JanetStructHead) == offsetof(JanetStructHead, data) *)
@@ -18,7 +21,7 @@ let head_of_data (d : [ `janet_kv ] Ctypes.structure Ctypes_static.ptr) : t =
 ;;
 
 (* Builder API *)
-let begin_ count : t = head_of_data (F.janet_struct_begin (Int32.of_int count))
+let begin_ count : t = head_of_data (F.janet_struct_begin (Int32.of_int_exn count))
 
 let put (st : t) (key : Janet.t) (value : Janet.t) =
   F.janet_struct_put (data_of_head st) key value
@@ -44,13 +47,13 @@ let find (st : t) (key : Janet.t) : [ `janet_kv ] Ctypes.structure Ctypes_static
 
 (* Field accessors via the head struct *)
 let length (st : t) : int =
-  Ctypes.getf Ctypes.(!@st) T.Janet_Struct.length |> Int32.to_int
+  Ctypes.getf Ctypes.(!@st) T.Janet_Struct.length |> Int32.to_int_exn
 ;;
 
 let hash (st : t) : int32 = Ctypes.getf Ctypes.(!@st) T.Janet_Struct.hash
 
 let capacity (st : t) : int =
-  Ctypes.getf Ctypes.(!@st) T.Janet_Struct.capacity |> Int32.to_int
+  Ctypes.getf Ctypes.(!@st) T.Janet_Struct.capacity |> Int32.to_int_exn
 ;;
 
 let proto (st : t) : [ `janet_kv ] Ctypes.structure Ctypes_static.ptr =
@@ -63,6 +66,6 @@ let unwrap (j : Janet.t) : t = head_of_data (F.janet_unwrap_struct j)
 
 let of_pairs (pairs : (Janet.t * Janet.t) list) : t =
   let st = begin_ (List.length pairs) in
-  List.iter (fun (k, v) -> put st k v) pairs;
+  List.iter ~f:(fun (k, v) -> put st k v) pairs;
   end_ st
 ;;
