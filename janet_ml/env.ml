@@ -4,6 +4,8 @@ module T = Janet_c.C.Types
 
 type t = Janet_table.t
 
+let core_env ~(replacements : Janet_table.t option) : t = F.janet_core_env replacements
+
 module Binding = struct
   type env = t
 

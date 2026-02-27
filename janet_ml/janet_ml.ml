@@ -24,9 +24,7 @@ let janet_init () =
   | _ -> failwith "Failed to setup Janet Enviroment"
 ;;
 
-let janet_core_env (replacements : Janet_table.t option) : Janet_table.t =
-  F.janet_core_env replacements
-;;
+let janet_deinit = F.janet_deinit
 
 let janet_dostring ~(env : Janet_table.t) (str : string) ~(source_path : string option)
   : Janet.t
@@ -59,8 +57,6 @@ let janet_dobytes (env : Janet_table.t) (bytes : bytes) (source_path : string op
   Janet.of_ptr out
 ;;
 
-let janet_deinit = F.janet_deinit
-
 let pcall
       (f : Janet_function.t)
       (args : Janet.t list)
@@ -75,7 +71,7 @@ let pcall
   signal, Janet.of_ptr out
 ;;
 
-let pcall (f : Janet_function.t) (args : Janet.t list) : Janet.t =
+let call (f : Janet_function.t) (args : Janet.t list) : Janet.t =
   let argn = Int32.of_int_exn (List.length args) in
   let argv = Ctypes.CArray.of_list T.janet args |> Ctypes.CArray.start in
   F.janet_call f argn argv
@@ -87,9 +83,9 @@ let mcall name (args : Janet.t list) =
   F.janet_mcall name argn argv
 ;;
 
-let stacktrace (fiber : Janet_fiber.t) (err : Janet.t) = F.janet_stacktrace fiber err
+module Unwrapped = struct
+  type janet = Janet.t
 
-module Janet_type = struct
   type t =
     | Number of float
     | Nil
@@ -109,9 +105,9 @@ module Janet_type = struct
     | Pointer of Janet_pointer.t
   [@@deriving sexp_of]
 
-  let check_type (janet : Janet.t) = F.janet_type janet
+  let check_type (janet : janet) = F.janet_type janet
 
-  let rec of_janet (janet : Janet.t) =
+  let rec of_janet (janet : janet) =
     match F.janet_type janet with
     | T.Number -> Number (F.janet_unwrap_number janet)
     | T.Nil -> Nil

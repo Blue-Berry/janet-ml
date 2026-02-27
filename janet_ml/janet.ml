@@ -1,3 +1,4 @@
+open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 

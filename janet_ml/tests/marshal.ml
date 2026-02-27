@@ -12,10 +12,10 @@ let%expect_test "Test compile janet" =
 (test 3 2)
 |}
   in
-  let env = janet_core_env None in
+  let env = Env.core_env ~replacements:None in
   janet_dostring ~env src ~source_path:(Some "test")
-  |> Janet_type.of_janet
-  |> Janet_type.sexp_of_t
+  |> Unwrapped.of_janet
+  |> Unwrapped.sexp_of_t
   |> print_s;
   [%expect {| (Number 5) |}]
 ;;
@@ -30,17 +30,17 @@ let%expect_test "Test resolve and call janet function" =
 (defn main [&] (test 1 2))
 |}
   in
-  let env = janet_core_env None in
+  let env = Env.core_env ~replacements:None in
   let _out = janet_dostring ~env src ~source_path:(Some "test") in
   let main = Janet.create_ptr () in
   let _b_type = F.janet_resolve env (F.janet_csymbol "main") main in
-  (match Janet_type.of_janet @@ Janet.of_ptr main with
-   | Janet_type.Function main ->
+  (match Unwrapped.of_janet @@ Janet.of_ptr main with
+   | Unwrapped.Function main ->
      let f = Janet_fiber.create main ~capacity:64 ~argv:[] in
      Janet_fiber.continue f (Janet.create ())
      |> snd
-     |> Janet_type.of_janet
-     |> Janet_type.sexp_of_t
+     |> Unwrapped.of_janet
+     |> Unwrapped.sexp_of_t
      |> Sexp.to_string_hum
    | _ -> "Not a function")
   |> print_endline;
@@ -55,19 +55,22 @@ let%expect_test "Test resolve and call janet function" =
 (defn main [&] (test 1 2))
 |}
   in
-  let env = janet_core_env None in
+  let env = Env.core_env ~replacements:None in
   let _out = janet_dostring ~env src ~source_path:(Some "test") in
   let image = Marshal.marshal_symbol ~env "main" in
   let main = Marshal.unmarshal image in
-  (match Janet_type.of_janet main with
-   | Janet_type.Function main ->
+  (match Unwrapped.of_janet main with
+   | Unwrapped.Function main ->
      let f = Janet_fiber.create main ~capacity:64 ~argv:[] in
      Janet_fiber.continue f (Janet.create ())
      |> snd
-     |> Janet_type.of_janet
-     |> Janet_type.sexp_of_t
+     |> Unwrapped.of_janet
+     |> Unwrapped.sexp_of_t
      |> Sexp.to_string_hum
    | _ -> "Not a function")
   |> print_endline;
-  [%expect {| (Number 3) |}]
+  [%expect
+    {|
+    (Number 3)
+    |}]
 ;;

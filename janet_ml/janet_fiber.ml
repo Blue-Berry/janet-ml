@@ -4,6 +4,8 @@ module T = Janet_c.C.Types
 
 type t = [ `janet_fiber ] Ctypes.structure Ctypes_static.ptr
 
+let stacktrace (fiber : t) (err : Janet.t) = F.janet_stacktrace fiber err
+
 type status =
   | Dead
   | Error
