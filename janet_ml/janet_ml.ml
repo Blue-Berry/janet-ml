@@ -1,10 +1,20 @@
 open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
+module Janet = Janet
+module Janet_abstract = Janet_abstract
+module Janet_buffer = Janet_buffer
+module Janet_cfunction = Janet_cfunction
 module Janet_compile = Janet_compile
-module Janet_parser = Janet_parser
-module Janet_table = Janet_table
+module Janet_compile_result = Janet_compile_result
 module Janet_fiber = Janet_fiber
+module Janet_function = Janet_function
+module Janet_parser = Janet_parser
+module Janet_pointer = Janet_pointer
+module Janet_struct = Janet_struct
+module Janet_table = Janet_table
+module Janet_tuple = Janet_tuple
+module Janet_vm = Janet_vm
 
 let janet_init () =
   match F.janet_init () with
@@ -76,10 +86,6 @@ let mcall name (args : Janet.t list) =
 ;;
 
 let stacktrace (fiber : Janet_fiber.t) (err : Janet.t) = F.janet_stacktrace fiber err
-
-let stacktrace (fiber : Janet_fiber.t) (err : Janet.t) (prefix : string) =
-  F.janet_stacktrace_ext fiber err prefix
-;;
 
 module Janet_type = struct
   type t =

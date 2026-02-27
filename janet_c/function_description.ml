@@ -88,7 +88,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_stacktrace_ext =
     foreign
       "janet_stacktrace_ext"
-      (ptr janet_fiber_s @-> janet @-> const string @-> returning void)
+      (ptr janet_fiber_s @-> janet @-> string @-> returning void)
   ;;
 
   (* Environment *)
@@ -100,11 +100,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_dostring =
     foreign
       "janet_dostring"
-      (ptr janet_table_s
-       @-> const string
-       @-> string_opt
-       @-> ptr_opt janet
-       @-> returning int)
+      (ptr janet_table_s @-> string @-> string_opt @-> ptr_opt janet @-> returning int)
   ;;
 
   let janet_dobytes =
@@ -232,13 +228,13 @@ module Functions (F : Ctypes.FOREIGN) = struct
 
   (* String operations - JanetString is const uint8_t* *)
   let janet_cstring =
-    foreign "janet_cstring" (const string @-> returning (ptr_opt (const uint8_t)))
+    foreign "janet_cstring" (string @-> returning (ptr_opt (const uint8_t)))
   ;;
 
   let janet_string =
     foreign
       "janet_string"
-      (const (ptr uint8_t) @-> int32_t @-> returning (ptr_opt (const uint8_t)))
+      (ptr uint8_t @-> int32_t @-> returning (ptr_opt (const uint8_t)))
   ;;
 
   (* Table operations *)
@@ -378,9 +374,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
   ;;
 
   let janet_buffer_push_cstring =
-    foreign
-      "janet_buffer_push_cstring"
-      (ptr janet_buffer_s @-> const string @-> returning void)
+    foreign "janet_buffer_push_cstring" (ptr janet_buffer_s @-> string @-> returning void)
   ;;
 
   let janet_buffer_push_u8 =
@@ -522,10 +516,10 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_unmarshal =
     foreign
       "janet_unmarshal"
-      (ptr (const uint8_t)
+      (string
        @-> size_t
        @-> int
-       @-> ptr_opt janet_table_s
+       @-> ptr janet_table_s
        @-> ptr_opt (ptr (const uint8_t))
        @-> returning janet)
   ;;
@@ -542,20 +536,18 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_fixarity = foreign "janet_fixarity" (int32_t @-> int32_t @-> returning void)
 
   (* Symbol/resolve *)
-  let janet_csymbol =
-    foreign "janet_csymbol" (const string @-> returning (ptr (const uint8_t)))
-  ;;
+  let janet_csymbol = foreign "janet_csymbol" (string @-> returning (ptr (const uint8_t)))
 
   let janet_def =
     foreign
       "janet_def"
-      (ptr janet_table_s @-> const string @-> janet @-> string_opt @-> returning void)
+      (ptr janet_table_s @-> string @-> janet @-> string_opt @-> returning void)
   ;;
 
   let janet_var =
     foreign
       "janet_var"
-      (ptr janet_table_s @-> const string @-> janet @-> string_opt @-> returning void)
+      (ptr janet_table_s @-> string @-> janet @-> string_opt @-> returning void)
   ;;
 
   let janet_resolve =

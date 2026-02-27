@@ -1,0 +1,5 @@
+#+title: Todo
+
+* TODO
+ * Create a with_janet_env that inits the env and deinits when done
+ * Create more module structure
