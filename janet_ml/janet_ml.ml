@@ -15,6 +15,8 @@ module Janet_struct = Janet_struct
 module Janet_table = Janet_table
 module Janet_tuple = Janet_tuple
 module Janet_vm = Janet_vm
+module Env = Env
+module Marshal = Marshal
 
 let janet_init () =
   match F.janet_init () with

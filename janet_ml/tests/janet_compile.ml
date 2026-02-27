@@ -57,18 +57,8 @@ let%expect_test "Test resolve and call janet function" =
   in
   let env = janet_core_env None in
   let _out = janet_dostring ~env src ~source_path:(Some "test") in
-  let main = Janet.create_ptr () in
-  let _b_type = F.janet_resolve env (F.janet_csymbol "main") main in
-  let image = F.janet_buffer (Int32.of_int_exn 512) in
-  F.janet_marshal image (Janet.of_ptr main) (Some env) 0;
-  let main =
-    F.janet_unmarshal
-      (Janet_buffer.to_string image)
-      (Janet_buffer.count image |> Unsigned.Size_t.of_int)
-      0
-      (F.janet_env_lookup (F.janet_core_env None))
-      None
-  in
+  let image = Marshal.marshal_symbol ~env "main" in
+  let main = Marshal.unmarshal image in
   (match Janet_type.of_janet main with
    | Janet_type.Function main ->
      let f = Janet_fiber.create main ~capacity:64 ~argv:[] in
