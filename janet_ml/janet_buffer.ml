@@ -1,7 +1,7 @@
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
-type t = [ `janet_buffer ] Ctypes.structure Ctypes_static.ptr
+type t = Type.buffer
 
 let create capacity : t = F.janet_buffer (Int32.of_int capacity)
 let deinit (buf : t) = F.janet_buffer_deinit buf

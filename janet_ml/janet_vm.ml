@@ -1,7 +1,7 @@
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
-type t = [ `janet_vm ] Ctypes.structure Ctypes_static.ptr
+type t = Type.vm
 
 let (local_vm : unit -> t) = F.janet_local_vm
 let (create : unit -> t) = F.janet_vm_alloc

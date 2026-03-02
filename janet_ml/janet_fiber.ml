@@ -2,7 +2,7 @@ open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
-type t = [ `janet_fiber ] Ctypes.structure Ctypes_static.ptr
+type t = Type.fiber
 
 let stacktrace (fiber : t) (err : Janet.t) = F.janet_stacktrace fiber err
 

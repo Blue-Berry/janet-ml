@@ -1,4 +1,4 @@
-type t = [ `janet_struct_head ] Ctypes.structure Ctypes_static.ptr
+type t = Type.struct_t
 
 val sexp_of_t : 'a -> Sexplib0.Sexp.t
 val data_of_head : t -> Janet_kv.t

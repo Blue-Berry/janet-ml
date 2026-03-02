@@ -2,7 +2,7 @@ open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
-type t = [ `janet_table ] Ctypes.structure Ctypes_static.ptr
+type t = Type.table
 
 let sexp_of_t _ = Sexp.of_string "janet_table"
 let create capacity : t = F.janet_table (Int32.of_int_exn capacity)

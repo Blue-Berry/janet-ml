@@ -1,7 +1,7 @@
 open! Core
 module T = Janet_c.C.Types
 
-type t = [ `janet_kv ] Ctypes.structure Ctypes_static.ptr
+type t = Type.kv
 
 let sexp_of_t _ = Sexp.of_string "janet_kv"
 let key (kv : t) : Janet.t = Ctypes.getf Ctypes.(!@kv) T.janet_kv_key

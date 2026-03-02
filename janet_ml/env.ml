@@ -2,7 +2,7 @@ open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
-type t = Janet_table.t
+type t = Type.table
 
 let core_env ~(replacements : Janet_table.t option) : t = F.janet_core_env replacements
 

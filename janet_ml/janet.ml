@@ -2,7 +2,7 @@ open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
-type t = [ `janet ] Ctypes.structure
+type t = Type.janet
 type ptr = t Ctypes.ptr
 
 let of_ptr : ptr -> t = Ctypes.( !@ )

@@ -2,7 +2,7 @@ open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
-type t = [ `janet_struct_head ] Ctypes.structure Ctypes_static.ptr
+type t = Type.struct_t
 
 let sexp_of_t _ = Sexp.of_string "janet_struct"
 

@@ -1,4 +1,4 @@
-type t = [ `janet_table ] Ctypes.structure Ctypes_static.ptr
+type t = Type.table
 
 val sexp_of_t : 'a -> Sexplib0.Sexp.t
 val create : int -> t

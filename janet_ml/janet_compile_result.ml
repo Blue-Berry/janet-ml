@@ -1,7 +1,7 @@
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
-type t = [ `janet_compile_result ] Ctypes.structure
+type t = Type.compile_result
 
 type status =
   | Ok

@@ -1,7 +1,7 @@
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
-type funcdef = [ `janet_funcdef ] Ctypes.structure Ctypes_static.ptr
+type funcdef = Type.funcdef
 
 type error =
   { message : string

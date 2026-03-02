@@ -1,7 +1,7 @@
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 
-type t = [ `janet_tuple_head ] Ctypes.structure Ctypes_static.ptr
+type t = Type.tuple
 
 (* Convert between head pointer and data pointer (the flexible array member).
    sizeof(JanetTupleHead) == offsetof(JanetTupleHead, data) *)
