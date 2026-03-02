@@ -17,6 +17,7 @@ end
 and Array : sig
   type t = Type.array
 
+  val sexp_of_t : t -> Core.Sexp.t
   val create : int -> t
   val push : t -> Janet.t -> unit
   val pop : t -> Janet.t
@@ -36,6 +37,7 @@ end
 and Buffer : sig
   type t = Type.buffer
 
+  val sexp_of_t : t -> Core.Sexp.t
   val create : int -> t
   val deinit : t -> unit
   val ensure : t -> capacity:int -> growth:int -> unit
@@ -79,7 +81,7 @@ end
 and Struct : sig
   type t = Type.struct_t
 
-  val sexp_of_t : 'a -> Core.Sexp.t
+  val sexp_of_t : t -> Core.Sexp.t
   val data_of_head : t -> Kv.t
   val head_of_data : Kv.t -> t
   val begin_ : int -> t
@@ -101,7 +103,7 @@ end
 and Table : sig
   type t = Type.table
 
-  val sexp_of_t : 'a -> Core.Sexp.t
+  val sexp_of_t : t -> Core.Sexp.t
   val create : int -> t
   val get : t -> key:Janet.t -> Janet.t
   val rawget : t -> key:Janet.t -> Janet.t
@@ -224,6 +226,7 @@ end
 and Tuple : sig
   type t = Type.tuple
 
+  val sexp_of_t : t -> Core.Sexp.t
   val set : t -> int -> Janet.t -> unit
   val of_list : Janet.t list -> t
   val of_array : Janet.t array -> t

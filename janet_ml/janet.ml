@@ -14,8 +14,8 @@ module Janet = struct
 end
 
 module Abstract = Janet_abstract.Make (Janet)
-module Array = Janet_array.Make (Janet)
-module Buffer = Janet_buffer.Make (Janet)
+module Array_ = Janet_array.Make (Janet)
+module Buffer_ = Janet_buffer.Make (Janet)
 module Cfunction = Janet_cfunction.Make (Janet)
 module Compile = Janet_compile.Make (Janet)
 module Compile_result = Janet_compile_result.Make (Janet)
@@ -23,9 +23,7 @@ module Fiber = Janet_fiber.Make (Janet)
 module Function = Janet_function.Make (Janet)
 module Parser = Janet_parser.Make (Janet)
 module Pointer = Janet_pointer.Make (Janet)
-module Struct = Janet_struct.Make (Janet)
-module Table = Janet_table.Make (Janet)
-module Tuple = Janet_tuple.Make (Janet)
+module Tuple_ = Janet_tuple.Make (Janet)
 module Vm = Janet_vm.Make (Janet)
 module Env = Env.Make (Janet)
 module Marshal = Marshal.Make (Janet)
@@ -38,6 +36,36 @@ module Kv = struct
     let k, v = to_pair t in
     List.sexp_of_t (fun x -> Unwrapped.of_janet x |> Unwrapped.sexp_of_t) [ k; v ]
   ;;
+end
+
+module Table = struct
+  include Janet_table.Make (Janet)
+
+  let sexp_of_t t = wrap t |> Unwrapped.of_janet |> Unwrapped.sexp_of_t
+end
+
+module Array = struct
+  include Array_
+
+  let sexp_of_t t = wrap t |> Unwrapped.of_janet |> Unwrapped.sexp_of_t
+end
+
+module Buffer = struct
+  include Buffer_
+
+  let sexp_of_t t = wrap t |> Unwrapped.of_janet |> Unwrapped.sexp_of_t
+end
+
+module Tuple = struct
+  include Tuple_
+
+  let sexp_of_t t = wrap t |> Unwrapped.of_janet |> Unwrapped.sexp_of_t
+end
+
+module Struct = struct
+  include Janet_struct.Make (Janet)
+
+  let sexp_of_t t = wrap t |> Unwrapped.of_janet |> Unwrapped.sexp_of_t
 end
 
 include Janet
