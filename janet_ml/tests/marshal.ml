@@ -32,9 +32,8 @@ let%expect_test "Test resolve and call janet function" =
   in
   let env = Env.core_env ~replacements:None in
   let _out = janet_dostring ~env src ~source_path:(Some "test") in
-  let main = Janet.create_ptr () in
-  let _b_type = F.janet_resolve env (F.janet_csymbol "main") main in
-  (match Unwrapped.of_janet @@ Janet.of_ptr main with
+  let main = Env.Binding.lookup ~env "main" |> Env.Binding.to_janet in
+  (match Unwrapped.of_janet main with
    | Unwrapped.Function main ->
      let f = Janet_fiber.create main ~capacity:64 ~argv:[] in
      Janet_fiber.continue f (Janet.create ())

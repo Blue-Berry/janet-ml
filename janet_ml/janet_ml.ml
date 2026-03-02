@@ -3,6 +3,7 @@ module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 module Janet = Janet
 module Janet_abstract = Janet_abstract
+module Janet_kv = Janet_kv
 module Janet_buffer = Janet_buffer
 module Janet_cfunction = Janet_cfunction
 module Janet_compile = Janet_compile

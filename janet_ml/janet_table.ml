@@ -6,10 +6,10 @@ type t = [ `janet_table ] Ctypes.structure Ctypes_static.ptr
 
 let sexp_of_t _ = Sexp.of_string "janet_table"
 let create capacity : t = F.janet_table (Int32.of_int_exn capacity)
-let get (tbl : t) (key : Janet.t) : Janet.t = F.janet_table_get tbl key
-let rawget (tbl : t) (key : Janet.t) : Janet.t = F.janet_table_rawget tbl key
-let remove (tbl : t) (key : Janet.t) : Janet.t = F.janet_table_remove tbl key
-let put (tbl : t) (key : Janet.t) (value : Janet.t) = F.janet_table_put tbl key value
+let get (tbl : t) ~(key : Janet.t) : Janet.t = F.janet_table_get tbl key
+let rawget (tbl : t) ~(key : Janet.t) : Janet.t = F.janet_table_rawget tbl key
+let remove (tbl : t) ~(key : Janet.t) : Janet.t = F.janet_table_remove tbl key
+let put (tbl : t) ~(key : Janet.t) ~(value : Janet.t) = F.janet_table_put tbl key value
 
 let to_struct (tbl : t) : Janet_struct.t =
   let data = F.janet_table_to_struct tbl in
@@ -27,7 +27,7 @@ let merge_struct (tbl : t) (other : Janet_struct.t) =
   F.janet_table_merge_struct tbl data
 ;;
 
-let find (tbl : t) (key : Janet.t) = F.janet_table_find tbl key
+let find (tbl : t) ~(key : Janet.t) = F.janet_table_find tbl key
 let count (tbl : t) = Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.count |> Int32.to_int
 let capacity (tbl : t) = Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.capacity |> Int32.to_int
 let proto (tbl : t) : t option = Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.proto
