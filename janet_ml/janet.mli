@@ -64,7 +64,16 @@ end
 and Function : sig
   type t = Type.function_t
 
-  val sexp_of_t : 'a -> Core.Sexp.t
+  val sexp_of_t : 'a -> Sexplib0.Sexp.t
+
+  val pcall
+    :  t
+    -> Janet.t list
+    -> ?fiber:Janet_ml__Type.fiber option
+    -> unit
+    -> Janet_c.Types_generated.janet_signal * Janet.t
+
+  val call : t -> Janet.t list -> Janet.t
 end
 
 and Struct : sig
