@@ -2,23 +2,6 @@ open! Core
 module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 module Janet = Janet
-module Janet_abstract = Janet_abstract
-module Janet_kv = Janet_kv
-module Janet_buffer = Janet_buffer
-module Janet_cfunction = Janet_cfunction
-module Janet_compile = Janet_compile
-module Janet_compile_result = Janet_compile_result
-module Janet_fiber = Janet_fiber
-module Janet_function = Janet_function
-module Janet_parser = Janet_parser
-module Janet_pointer = Janet_pointer
-module Janet_struct = Janet_struct
-module Janet_table = Janet_table
-module Janet_tuple = Janet_tuple
-module Janet_vm = Janet_vm
-module Env = Env
-module Marshal = Marshal
-module Unwrapped = Unwrapped
 
 let janet_init () =
   match F.janet_init () with
@@ -28,7 +11,7 @@ let janet_init () =
 
 let janet_deinit = F.janet_deinit
 
-let janet_dostring ~(env : Janet_table.t) (str : string) ~(source_path : string option)
+let janet_dostring ~(env : Janet.Table.t) (str : string) ~(source_path : string option)
   : Janet.t
   =
   let out = Janet.create_ptr () in
@@ -36,7 +19,7 @@ let janet_dostring ~(env : Janet_table.t) (str : string) ~(source_path : string 
   Janet.of_ptr out
 ;;
 
-let janet_dobytes (env : Janet_table.t) (bytes : bytes) (source_path : string option)
+let janet_dobytes (env : Janet.Table.t) (bytes : bytes) (source_path : string option)
   : Janet.t
   =
   let len = Bytes.length bytes in
@@ -60,9 +43,9 @@ let janet_dobytes (env : Janet_table.t) (bytes : bytes) (source_path : string op
 ;;
 
 let pcall
-      (f : Janet_function.t)
+      (f : Janet.Function.t)
       (args : Janet.t list)
-      ?(fiber : Janet_fiber.t option = None)
+      ?(fiber : Janet.Fiber.t option = None)
       ()
   =
   let argn = Int32.of_int_exn (List.length args) in
@@ -73,7 +56,7 @@ let pcall
   signal, Janet.of_ptr out
 ;;
 
-let call (f : Janet_function.t) (args : Janet.t list) : Janet.t =
+let call (f : Janet.Function.t) (args : Janet.t list) : Janet.t =
   let argn = Int32.of_int_exn (List.length args) in
   let argv = Ctypes.CArray.of_list T.janet args |> Ctypes.CArray.start in
   F.janet_call f argn argv

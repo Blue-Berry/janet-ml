@@ -12,6 +12,7 @@ let%expect_test "Test compile janet" =
 (test 3 2)
 |}
   in
+  let open Janet in
   let env = Env.core_env ~replacements:None in
   janet_dostring ~env src ~source_path:(Some "test")
   |> Unwrapped.of_janet
@@ -30,13 +31,14 @@ let%expect_test "Test resolve and call janet function" =
 (defn main [&] (test 1 2))
 |}
   in
+  let open Janet in
   let env = Env.core_env ~replacements:None in
   let _out = janet_dostring ~env src ~source_path:(Some "test") in
   let main = Env.Binding.lookup ~env "main" |> Env.Binding.to_janet in
   (match Unwrapped.of_janet main with
    | Unwrapped.Function main ->
-     let f = Janet_fiber.create main ~capacity:64 ~argv:[] in
-     Janet_fiber.continue f (Janet.create ())
+     let f = Fiber.create main ~capacity:64 ~argv:[] in
+     Fiber.continue f (Janet.create ())
      |> snd
      |> Unwrapped.of_janet
      |> Unwrapped.sexp_of_t
@@ -54,14 +56,15 @@ let%expect_test "Test resolve and call janet function" =
 (defn main [&] (test 1 2))
 |}
   in
+  let open Janet in
   let env = Env.core_env ~replacements:None in
   let _out = janet_dostring ~env src ~source_path:(Some "test") in
   let image = Marshal.marshal_symbol ~env "main" in
   let main = Marshal.unmarshal image in
   (match Unwrapped.of_janet main with
    | Unwrapped.Function main ->
-     let f = Janet_fiber.create main ~capacity:64 ~argv:[] in
-     Janet_fiber.continue f (Janet.create ())
+     let f = Fiber.create main ~capacity:64 ~argv:[] in
+     Fiber.continue f (Janet.create ())
      |> snd
      |> Unwrapped.of_janet
      |> Unwrapped.sexp_of_t
