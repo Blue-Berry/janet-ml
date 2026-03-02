@@ -14,6 +14,7 @@ module Janet = struct
 end
 
 module Abstract = Janet_abstract.Make (Janet)
+module Array = Janet_array.Make (Janet)
 module Buffer = Janet_buffer.Make (Janet)
 module Cfunction = Janet_cfunction.Make (Janet)
 module Compile = Janet_compile.Make (Janet)

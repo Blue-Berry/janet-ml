@@ -1,5 +1,6 @@
 type janet = [ `janet ] Ctypes.structure
 type abstract = unit Ctypes_static.ptr
+type array = [ `janet_array ] Ctypes.structure Ctypes_static.ptr
 type buffer = [ `janet_buffer ] Ctypes.structure Ctypes_static.ptr
 
 type cfunction =

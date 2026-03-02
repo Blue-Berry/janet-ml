@@ -3,6 +3,7 @@ module Make (I : Janet_sig.S) = struct
   module F = Janet_c.C.Functions
   module T = Janet_c.C.Types
   module Janet_abstract = Janet_abstract.Make (I)
+  module Janet_array = Janet_array.Make (I)
   module Janet_buffer = Janet_buffer.Make (I)
   module Janet_cfunction = Janet_cfunction.Make (I)
   module Janet_fiber = Janet_fiber.Make (I)
@@ -48,15 +49,8 @@ module Make (I : Janet_sig.S) = struct
     | T.Symbol -> Symbol (F.janet_unwrap_symbol janet)
     | T.Keyword -> Keyword (F.janet_unwrap_keyword janet)
     | T.Array ->
-      let arr = Ctypes.( !@ ) (F.janet_unwrap_array janet) in
-      let count = Ctypes.getf arr T.Janet_Array.count |> Int32.to_int_exn in
-      let data = Ctypes.getf arr T.Janet_Array.data in
-      let arr =
-        Ctypes.CArray.from_ptr data count
-        |> Ctypes.CArray.to_list
-        |> List.map ~f:(fun x -> of_janet x)
-      in
-      Array arr
+      let arr = Janet_array.unwrap janet in
+      Array (Janet_array.to_list arr |> List.map ~f:of_janet)
     | T.Buffer ->
       let buf = Janet_buffer.unwrap janet in
       Buffer (Janet_buffer.contents buf)
