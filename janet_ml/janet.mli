@@ -185,7 +185,7 @@ end
 and Kv : sig
   type t = Type.kv
 
-  val sexp_of_t : 'a -> Core.Sexp.t
+  val sexp_of_t : t -> Core.Sexp.t
   val key : t -> Janet.t
   val value : t -> Janet.t
   val is_null : t -> bool

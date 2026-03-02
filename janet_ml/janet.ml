@@ -21,7 +21,6 @@ module Compile = Janet_compile.Make (Janet)
 module Compile_result = Janet_compile_result.Make (Janet)
 module Fiber = Janet_fiber.Make (Janet)
 module Function = Janet_function.Make (Janet)
-module Kv = Janet_kv.Make (Janet)
 module Parser = Janet_parser.Make (Janet)
 module Pointer = Janet_pointer.Make (Janet)
 module Struct = Janet_struct.Make (Janet)
@@ -31,6 +30,16 @@ module Vm = Janet_vm.Make (Janet)
 module Env = Env.Make (Janet)
 module Marshal = Marshal.Make (Janet)
 module Unwrapped = Unwrapped.Make (Janet)
+
+module Kv = struct
+  include Janet_kv.Make (Janet)
+
+  let sexp_of_t t =
+    let k, v = to_pair t in
+    List.sexp_of_t (fun x -> Unwrapped.of_janet x |> Unwrapped.sexp_of_t) [ k; v ]
+  ;;
+end
+
 include Janet
 
 let sexp_of_t t = Unwrapped.(sexp_of_t (of_janet t))

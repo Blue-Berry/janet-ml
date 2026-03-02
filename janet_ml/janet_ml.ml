@@ -3,15 +3,15 @@ module F = Janet_c.C.Functions
 module T = Janet_c.C.Types
 module Janet = Janet
 
-let janet_init () =
+let init () =
   match F.janet_init () with
   | 0 -> ()
   | _ -> failwith "Failed to setup Janet Enviroment"
 ;;
 
-let janet_deinit = F.janet_deinit
+let deinit = F.janet_deinit
 
-let janet_dostring ~(env : Janet.Table.t) (str : string) ~(source_path : string option)
+let dostring ~(env : Janet.Table.t) (str : string) ~(source_path : string option)
   : Janet.t
   =
   let out = Janet.create_ptr () in
@@ -19,9 +19,7 @@ let janet_dostring ~(env : Janet.Table.t) (str : string) ~(source_path : string 
   Janet.of_ptr out
 ;;
 
-let janet_dobytes (env : Janet.Table.t) (bytes : bytes) (source_path : string option)
-  : Janet.t
-  =
+let dobytes (env : Janet.Table.t) (bytes : bytes) (source_path : string option) : Janet.t =
   let len = Bytes.length bytes in
   let c_arr = Ctypes.CArray.make Ctypes.uint8_t len in
   for i = 0 to len - 1 do

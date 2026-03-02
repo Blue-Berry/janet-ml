@@ -2,7 +2,7 @@ open! Core
 open Janet_ml
 
 let%expect_test "Test compile janet" =
-  janet_init ();
+  init ();
   let src =
     {|
 (defn test [a b] (+ a b))
@@ -14,7 +14,7 @@ let%expect_test "Test compile janet" =
   in
   let open Janet in
   let env = Env.core_env ~replacements:None in
-  janet_dostring ~env src ~source_path:(Some "test")
+  dostring ~env src ~source_path:(Some "test")
   |> Unwrapped.of_janet
   |> Unwrapped.sexp_of_t
   |> print_s;
@@ -24,7 +24,7 @@ let%expect_test "Test compile janet" =
 (* janet_resolve(env, janet_csymbol("load-image-dict"), &lidv); *)
 
 let%expect_test "Test resolve and call janet function" =
-  janet_init ();
+  init ();
   let src =
     {|
 (defn test [a b] (+ a b))
@@ -33,7 +33,7 @@ let%expect_test "Test resolve and call janet function" =
   in
   let open Janet in
   let env = Env.core_env ~replacements:None in
-  let _out = janet_dostring ~env src ~source_path:(Some "test") in
+  let _out = dostring ~env src ~source_path:(Some "test") in
   let main = Env.Binding.lookup ~env "main" |> Env.Binding.to_janet in
   (match Unwrapped.of_janet main with
    | Unwrapped.Function main ->
@@ -49,7 +49,7 @@ let%expect_test "Test resolve and call janet function" =
 ;;
 
 let%expect_test "Test resolve and call janet function" =
-  janet_init ();
+  init ();
   let src =
     {|
 (defn test [a b] (+ a b))
@@ -58,7 +58,7 @@ let%expect_test "Test resolve and call janet function" =
   in
   let open Janet in
   let env = Env.core_env ~replacements:None in
-  let _out = janet_dostring ~env src ~source_path:(Some "test") in
+  let _out = dostring ~env src ~source_path:(Some "test") in
   let image = Marshal.marshal_symbol ~env "main" in
   let main = Marshal.unmarshal image in
   (match Unwrapped.of_janet main with
