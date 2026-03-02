@@ -118,10 +118,11 @@ let%expect_test "Table.of_pairs and Table.iter" =
   let v1 = Unwrapped.to_janet (Unwrapped.Number 10.0) in
   let v2 = Unwrapped.to_janet (Unwrapped.Number 20.0) in
   let tbl = Table.of_pairs [ k1, v1; k2, v2 ] in
-  let sum = Table.fold tbl ~init:0.0 ~f:(fun acc _k v ->
-    match Unwrapped.of_janet v with
-    | Unwrapped.Number n -> acc +. n
-    | _ -> acc)
+  let sum =
+    Table.fold tbl ~init:0.0 ~f:(fun acc _k v ->
+      match Unwrapped.of_janet v with
+      | Unwrapped.Number n -> acc +. n
+      | _ -> acc)
   in
   Printf.printf "sum = %.0f\n" sum;
   [%expect {| sum = 30 |}]
@@ -151,11 +152,12 @@ let%expect_test "with_root keeps value alive" =
 let%expect_test "register_cfun - OCaml callback from Janet" =
   init ();
   let env = Env.core_env ~replacements:None in
-  let _cb = Janet_ml.register_cfun ~env "ocaml-square" (fun argc argv ->
-    assert (Int32.equal argc 1l);
-    let args = Ctypes.CArray.from_ptr argv 1 in
-    let x = Ctypes.CArray.get args 0 |> Janet_c.C.Functions.janet_unwrap_number in
-    Janet_c.C.Functions.janet_wrap_number (x *. x))
+  let _cb =
+    Janet_ml.register_cfun ~env "ocaml-square" (fun argc argv ->
+      assert (Int32.equal argc 1l);
+      let args = Ctypes.CArray.from_ptr argv 1 in
+      let x = Ctypes.CArray.get args 0 |> Janet_c.C.Functions.janet_unwrap_number in
+      Janet_c.C.Functions.janet_wrap_number (x *. x))
   in
   Janet_ml.dostring_exn ~env {|(ocaml-square 7)|} ~source_path:(Some "test")
   |> Unwrapped.of_janet
@@ -167,9 +169,16 @@ let%expect_test "register_cfun - OCaml callback from Janet" =
 let%expect_test "Fiber.cancel" =
   init ();
   let env = Env.core_env ~replacements:None in
-  let _out = Janet_ml.dostring_exn ~env {|(defn looper [] (forever (yield 1)))|} ~source_path:(Some "test") in
+  let _out =
+    Janet_ml.dostring_exn
+      ~env
+      {|(defn looper [] (forever (yield 1)))|}
+      ~source_path:(Some "test")
+  in
   let fn_ =
-    match Env.Binding.lookup ~env "looper" |> Env.Binding.to_janet |> Unwrapped.of_janet with
+    match
+      Env.Binding.lookup ~env "looper" |> Env.Binding.to_janet |> Unwrapped.of_janet
+    with
     | Unwrapped.Function f -> f
     | _ -> failwith "not a function"
   in

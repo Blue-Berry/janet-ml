@@ -555,11 +555,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_dictionary_view =
     foreign
       "janet_dictionary_view"
-      (janet
-       @-> ptr void
-       @-> ptr int32_t
-       @-> ptr int32_t
-       @-> returning int)
+      (janet @-> ptr void @-> ptr int32_t @-> ptr int32_t @-> returning int)
   ;;
 
   let janet_dictionary_next =

@@ -50,9 +50,7 @@ module Make (I : Janet_sig.S) = struct
   ;;
 
   (** Set the logical count of the array, truncating or zero-padding as needed. *)
-  let set_count (arr : t) (n : int) : unit =
-    F.janet_array_setcount arr (Int32.of_int n)
-  ;;
+  let set_count (arr : t) (n : int) : unit = F.janet_array_setcount arr (Int32.of_int n)
 
   (** Create a Janet array from an OCaml array of Janet values, using the C
       [janet_array_n] constructor (single allocation). *)
