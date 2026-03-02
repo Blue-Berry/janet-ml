@@ -67,4 +67,29 @@ module Make (I : Janet_sig.S) = struct
     List.iter ~f:(fun (k, v) -> put st k v) pairs;
     end_ st
   ;;
+
+  (* Iterate over all occupied key-value pairs using janet_dictionary_next. *)
+  let iter (st : t) ~(f : I.t -> I.t -> unit) : unit =
+    let kvs = data_of_head st in
+    let cap = capacity st in
+    let null_kv = Ctypes.from_voidp T.janet_kv Ctypes.null in
+    let cur = ref (F.janet_dictionary_next kvs (Int32.of_int_exn cap) null_kv) in
+    while not (Ctypes.is_null !cur) do
+      let kv = Ctypes.(!@(!cur)) in
+      let key = Ctypes.getf kv T.janet_kv_key in
+      let value = Ctypes.getf kv T.janet_kv_value in
+      f key value;
+      cur := F.janet_dictionary_next kvs (Int32.of_int_exn cap) !cur
+    done
+  ;;
+
+  let fold (st : t) ~init ~(f : 'a -> I.t -> I.t -> 'a) : 'a =
+    let acc = ref init in
+    iter st ~f:(fun k v -> acc := f !acc k v);
+    !acc
+  ;;
+
+  let to_pairs (st : t) : (I.t * I.t) list =
+    fold st ~init:[] ~f:(fun acc k v -> (k, v) :: acc) |> List.rev
+  ;;
 end

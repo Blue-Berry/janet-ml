@@ -1,5 +1,94 @@
 #+title: Todo
 
-* TODO
- * Create a with_janet_env that inits the env and deinits when done
- * Create more module structure
+* High Priority
+
+** TODO [#A] with_janet / with_janet_env RAII bracket
+   Create Fun.protect-based wrappers in janet_ml.ml / janet_ml.mli:
+   - =with_janet : (unit -> 'a) -> 'a= — calls init, runs f, always calls deinit
+   - =with_janet_env : (Janet.Table.t -> 'a) -> 'a= — creates a core_env and passes it in
+   Fixes the current footgun where an exception leaks the Janet VM.
+
+** TODO [#A] Error handling in dostring / dobytes
+   Currently =dostring= silently discards the =janet_signal= return value, returning
+   =Nil= on error with no indication of failure. Fix:
+   - Change =dostring= to return =(janet_signal * Janet.t)=
+   - Change =dobytes= likewise
+   - Add =dostring_exn= / =dobytes_exn= convenience variants that raise a typed
+     OCaml exception (=Janet_error of string=) on non-ok signal
+   Update janet_ml.mli accordingly.
+
+** TODO [#A] Function.call error handling
+   =Function.call= calls =janet_call= which can raise a Janet panic (crashing
+   the process if uncaught). Fix:
+   - Make =Function.pcall= the primary surface (already exists, signal + value)
+   - Add =Function.call_exn : t -> Janet.t list -> Janet.t= that wraps pcall
+     and raises =Janet_error= on error signal
+   - Deprecate the current silent =call=
+
+** TODO [#A] with_root GC bracket
+   Bind =janet_gcroot= / =janet_gcunroot= internally and expose only the safe
+   bracket form:
+   - =Janet.with_root : Janet.t -> f:(Janet.t -> 'a) -> 'a=
+   This prevents use-after-GC bugs when holding Janet values across allocating
+   operations (any dostring, fiber continue, etc.).
+
+* Medium Priority
+
+** TODO [#B] Janet.to_string and Janet.pretty
+   Bind =janet_description= and =janet_pretty= in function_description.ml.
+   Expose on the high-level side:
+   - =Janet.to_string : Janet.t -> string=
+   - =Janet.pretty : ?depth:int -> Janet.t -> string=
+   Essential for debugging and the REPL demo.
+
+** TODO [#B] Env.def / Env.var
+   Bind =janet_def= / =janet_var= / =janet_def_sm= / =janet_var_sm= in
+   function_description.ml and expose via the Env module:
+   - =Env.def : Env.t -> string -> Janet.t -> unit=
+   - =Env.var : Env.t -> string -> Janet.t -> unit=
+   Currently users must run Janet source to register values, which is awkward.
+
+** TODO [#B] Table/Struct iteration
+   Bind =janet_dictionary_next= to enable iteration over Janet dicts. Expose:
+   - =Table.iter : Table.t -> f:(Janet.t -> Janet.t -> unit) -> unit=
+   - =Table.fold : Table.t -> init:'a -> f:('a -> Janet.t -> Janet.t -> 'a) -> 'a=
+   - =Table.to_seq : Table.t -> (Janet.t * Janet.t) Seq.t=
+   - =Table.of_pairs : (Janet.t * Janet.t) list -> Table.t=
+   - =Struct.to_seq : Struct.t -> (Janet.t * Janet.t) Seq.t=
+
+** TODO [#B] Fiber.cancel
+   Bind =janet_cancel= in function_description.ml. Expose:
+   - =Fiber.cancel : Fiber.t -> Janet.t -> unit=
+   Needed for timeout / error-injection patterns.
+
+* Low Priority
+
+** TODO [#C] Unwrapped.t integer variants
+   Bind =janet_wrap_s64= / =janet_wrap_u64= / =janet_unwrap_s64= /
+   =janet_unwrap_u64=. Add to =Unwrapped.t=:
+   - =Int of int64=
+   - =UInt of Unsigned.uint64=
+   So Janet integer values can be round-tripped without float precision loss.
+
+** TODO [#C] Array missing bindings
+   Bind and expose:
+   - =janet_array_ensure= → =Array.ensure : t -> capacity:int -> growth:int -> unit=
+   - =janet_array_setcount= → =Array.set_count : t -> int -> unit=
+   - =janet_array_n= → =Array.of_c_array= (create from C array)
+
+** TODO [#C] OCaml→Janet dynamic callbacks
+   Use =ctypes= =Foreign.funptr= to let an OCaml closure be registered as a
+   Janet C-function:
+   - =Janet_ml.register_cfun : env:Env.t -> string -> (Janet.t array -> Janet.t) -> unit=
+   Enables embedding OCaml logic callable from Janet scripts.
+
+** TODO [#C] Fix bin/main.ml + expand tests
+   - Rewrite =bin/main.ml= to use the =Janet_ml= high-level API (currently
+     bypasses it entirely and calls the raw C layer)
+   - Add tests for:
+     * Error paths in dostring (signal != ok)
+     * Table iteration and of_pairs
+     * with_root bracket
+     * Fiber.cancel
+     * Marshal round-trips for all Unwrapped.t variants
+     * Janet.to_string / Janet.pretty

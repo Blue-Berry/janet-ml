@@ -21,7 +21,7 @@
  (name janet-ml)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml ctypes ppx_jane core)
+ (depends ocaml ctypes ctypes-foreign ppx_jane core)
  (tags
   ("add topics" "to describe" your project)))
 

@@ -85,6 +85,15 @@ module Functions (F : Ctypes.FOREIGN) = struct
     foreign "janet_stacktrace" (ptr janet_fiber_s @-> janet @-> returning void)
   ;;
 
+  (* Inject an error into a fiber (equivalent to Janet's (cancel fiber msg)). *)
+  let janet_cancel =
+    foreign "janet_cancel" (ptr janet_fiber_s @-> janet @-> returning void)
+  ;;
+
+  let janet_fiber_can_resume =
+    foreign "janet_fiber_can_resume" (ptr janet_fiber_s @-> returning int)
+  ;;
+
   let janet_stacktrace_ext =
     foreign
       "janet_stacktrace_ext"
@@ -168,6 +177,12 @@ module Functions (F : Ctypes.FOREIGN) = struct
 
   let janet_wrap_abstract = foreign "janet_wrap_abstract" (ptr void @-> returning janet)
   let janet_wrap_pointer = foreign "janet_wrap_pointer" (ptr void @-> returning janet)
+
+  (* s64/u64 integer boxing *)
+  let janet_wrap_s64 = foreign "janet_wrap_s64" (int64_t @-> returning janet)
+  let janet_wrap_u64 = foreign "janet_wrap_u64" (uint64_t @-> returning janet)
+  let janet_unwrap_s64 = foreign "janet_unwrap_s64" (janet @-> returning int64_t)
+  let janet_unwrap_u64 = foreign "janet_unwrap_u64" (janet @-> returning uint64_t)
 
   (* Unwrap functions - extract values from Janet *)
   let janet_unwrap_number = foreign "janet_unwrap_number" (janet @-> returning double)
@@ -333,6 +348,20 @@ module Functions (F : Ctypes.FOREIGN) = struct
 
   let janet_array_pop = foreign "janet_array_pop" (ptr janet_array_s @-> returning janet)
   let janet_array_peek = foreign "janet_array_peek" (ptr janet_array_s @-> returning janet)
+
+  let janet_array_ensure =
+    foreign
+      "janet_array_ensure"
+      (ptr janet_array_s @-> int32_t @-> int32_t @-> returning void)
+  ;;
+
+  let janet_array_setcount =
+    foreign "janet_array_setcount" (ptr janet_array_s @-> int32_t @-> returning void)
+  ;;
+
+  let janet_array_n =
+    foreign "janet_array_n" (ptr janet @-> int32_t @-> returning (ptr janet_array_s))
+  ;;
 
   (* Buffer operations *)
   let janet_buffer = foreign "janet_buffer" (int32_t @-> returning (ptr janet_buffer_s))
@@ -505,6 +534,39 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_length = foreign "janet_length" (janet @-> returning int32_t)
   let janet_get = foreign "janet_get" (janet @-> janet @-> returning janet)
   let janet_put = foreign "janet_put" (janet @-> janet @-> janet @-> returning void)
+
+  (* Formatting / to-string *)
+  (* janet_description returns a JanetString, bound as OCaml string. *)
+  let janet_description = foreign "janet_description" (janet @-> returning string)
+  let janet_to_string = foreign "janet_to_string" (janet @-> returning string)
+
+  (* janet_pretty writes into a JanetBuffer and returns the same buffer.
+     flags: 0 = default, JANET_PRETTY_COLOR = 1, JANET_PRETTY_ONELINE = 4. *)
+  let janet_pretty =
+    foreign
+      "janet_pretty"
+      (ptr janet_buffer_s @-> int @-> int @-> janet @-> returning (ptr janet_buffer_s))
+  ;;
+
+  (* Dictionary iteration *)
+  (* janet_dictionary_view extracts (kvs, len, cap) from any dict-like Janet value.
+     janet_dictionary_next advances to the next occupied slot; pass NULL for [kv]
+     to start, returns NULL when exhausted. *)
+  let janet_dictionary_view =
+    foreign
+      "janet_dictionary_view"
+      (janet
+       @-> ptr void
+       @-> ptr int32_t
+       @-> ptr int32_t
+       @-> returning int)
+  ;;
+
+  let janet_dictionary_next =
+    foreign
+      "janet_dictionary_next"
+      (ptr janet_kv_s @-> int32_t @-> ptr janet_kv_s @-> returning (ptr janet_kv_s))
+  ;;
 
   (* Marshalling *)
   let janet_marshal =

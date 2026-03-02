@@ -14,6 +14,12 @@ module Make (I : Janet_sig.S) = struct
   let remove (tbl : t) ~(key : I.t) : I.t = F.janet_table_remove tbl key
   let put (tbl : t) ~(key : I.t) ~(value : I.t) = F.janet_table_put tbl key value
 
+  let of_pairs (pairs : (I.t * I.t) list) : t =
+    let tbl = create (List.length pairs) in
+    List.iter pairs ~f:(fun (k, v) -> put tbl ~key:k ~value:v);
+    tbl
+  ;;
+
   let to_struct (tbl : t) : Janet_struct.t =
     let data = F.janet_table_to_struct tbl in
     let offset = Ctypes.sizeof T.Janet_Struct.head in
@@ -40,4 +46,32 @@ module Make (I : Janet_sig.S) = struct
   let proto (tbl : t) : t option = Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.proto
   let wrap (tbl : t) : I.t = F.janet_wrap_table tbl
   let unwrap (j : I.t) : t = F.janet_unwrap_table j
+
+  (* Iterate over all key-value pairs using janet_dictionary_next.
+     Directly reads the data/capacity fields from the JanetTable struct,
+     which avoids the void-pointer dance of janet_dictionary_view. *)
+  let iter (tbl : t) ~(f : I.t -> I.t -> unit) : unit =
+    let kvs = Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.data in
+    let cap = Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.capacity |> Int32.to_int_exn in
+    (* null sentinel: allocate a dummy pointer and use its null-state *)
+    let null_kv = Ctypes.from_voidp T.janet_kv Ctypes.null in
+    let cur = ref (F.janet_dictionary_next kvs (Int32.of_int_exn cap) null_kv) in
+    while not (Ctypes.is_null !cur) do
+      let kv = Ctypes.(!@(!cur)) in
+      let key = Ctypes.getf kv T.janet_kv_key in
+      let value = Ctypes.getf kv T.janet_kv_value in
+      f key value;
+      cur := F.janet_dictionary_next kvs (Int32.of_int_exn cap) !cur
+    done
+  ;;
+
+  let fold (tbl : t) ~init ~(f : 'a -> I.t -> I.t -> 'a) : 'a =
+    let acc = ref init in
+    iter tbl ~f:(fun k v -> acc := f !acc k v);
+    !acc
+  ;;
+
+  let to_pairs (tbl : t) : (I.t * I.t) list =
+    fold tbl ~init:[] ~f:(fun acc k v -> (k, v) :: acc) |> List.rev
+  ;;
 end

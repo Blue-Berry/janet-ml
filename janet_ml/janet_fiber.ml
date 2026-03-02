@@ -84,4 +84,12 @@ module Make (I : Janet_sig.S) = struct
   ;;
 
   let set_env (t : t) (env : Janet_table.t) = Ctypes.(setf !@t T.Janet_Fiber.env env)
+
+  (** Inject [msg] as an error into [fiber], transitioning it to the Error state.
+      Equivalent to Janet's [(cancel fiber msg)]. The error propagates when the
+      fiber is next resumed via [continue] or [step]. *)
+  let cancel (fiber : t) (msg : I.t) : unit = F.janet_cancel fiber msg
+
+  (** Returns true if the fiber can be resumed (status is New or Pending). *)
+  let can_resume (fiber : t) : bool = F.janet_fiber_can_resume fiber <> 0
 end

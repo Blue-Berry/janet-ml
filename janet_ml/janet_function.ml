@@ -16,6 +16,23 @@ module Make (I : Janet_sig.S) = struct
     signal, I.of_ptr out
   ;;
 
+  (** Safe call: uses [pcall] internally and raises [Janet_errors.Janet_error]
+      on any non-ok signal. Prefer this over [call] for production code. *)
+  let call_exn (f : t) (args : I.t list) : I.t =
+    let signal, value = pcall f args () in
+    (match signal with
+     | T.Signal_ok -> ()
+     | T.Signal_error ->
+       raise (Janet_errors.Janet_error "Janet function call raised an error")
+     | T.Signal_debug ->
+       raise (Janet_errors.Janet_error "Janet function call raised debug signal")
+     | T.Signal_yield ->
+       raise (Janet_errors.Janet_error "Janet function call yielded unexpectedly"));
+    value
+  ;;
+
+  (** Direct call via [janet_call]. Note: a Janet panic in the called function
+      will terminate the process. Prefer [call_exn] or [pcall] for safety. *)
   let call (f : t) (args : I.t list) : I.t =
     let argn = Int32.of_int_exn (List.length args) in
     let argv = Ctypes.CArray.of_list T.janet args |> Ctypes.CArray.start in

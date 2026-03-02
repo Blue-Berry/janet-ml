@@ -6,6 +6,11 @@ module rec Janet : sig
   val to_ptr : t -> ptr
   val create : unit -> t
   val create_ptr : unit -> ptr
+
+  (** Root [v] against the Janet GC for the duration of [f v], unrooting it
+      afterwards even if [f] raises. Use this to keep a [Janet.t] alive across
+      any allocating Janet operation. *)
+  val with_root : t -> f:(t -> 'a) -> 'a
 end
 
 and Abstract : sig
@@ -33,6 +38,15 @@ and Array : sig
   val of_array : Janet.t array -> t
   val wrap : t -> Janet.t
   val unwrap : Janet.t -> t
+
+  (** Pre-allocate storage: ensure at least [capacity] slots, growing by [growth]. *)
+  val ensure : t -> capacity:int -> growth:int -> unit
+
+  (** Set the logical element count, zero-padding or truncating as needed. *)
+  val set_count : t -> int -> unit
+
+  (** Create a Janet array from an OCaml array using a single C allocation. *)
+  val of_janet_array : Janet.t array -> t
 end
 
 and Buffer : sig
@@ -77,6 +91,12 @@ and Function : sig
     -> unit
     -> Janet_c.Types_generated.janet_signal * Janet.t
 
+  (** Call [f] with [pcall] and raise [Janet_errors.Janet_error] on any
+      non-ok signal. Prefer this over [call] for production code. *)
+  val call_exn : t -> Janet.t list -> Janet.t
+
+  (** Direct call via [janet_call]. A Janet panic terminates the process;
+      prefer [call_exn] or [pcall] for safety. *)
   val call : t -> Janet.t list -> Janet.t
 end
 
@@ -100,6 +120,15 @@ and Struct : sig
   val wrap : t -> Janet.t
   val unwrap : Janet.t -> t
   val of_pairs : (Janet.t * Janet.t) list -> t
+
+  (** Iterate over all key-value pairs in the struct. *)
+  val iter : t -> f:(Janet.t -> Janet.t -> unit) -> unit
+
+  (** Fold over all key-value pairs in the struct. *)
+  val fold : t -> init:'a -> f:('a -> Janet.t -> Janet.t -> 'a) -> 'a
+
+  (** Return all key-value pairs as a list. *)
+  val to_pairs : t -> (Janet.t * Janet.t) list
 end
 
 and Table : sig
@@ -107,6 +136,7 @@ and Table : sig
 
   val sexp_of_t : t -> Core.Sexp.t
   val create : int -> t
+  val of_pairs : (Janet.t * Janet.t) list -> t
   val get : t -> key:Janet.t -> Janet.t
   val rawget : t -> key:Janet.t -> Janet.t
   val remove : t -> key:Janet.t -> Janet.t
@@ -120,6 +150,15 @@ and Table : sig
   val proto : t -> t option
   val wrap : t -> Janet.t
   val unwrap : Janet.t -> t
+
+  (** Iterate over all key-value pairs in the table. *)
+  val iter : t -> f:(Janet.t -> Janet.t -> unit) -> unit
+
+  (** Fold over all key-value pairs in the table. *)
+  val fold : t -> init:'a -> f:('a -> Janet.t -> Janet.t -> 'a) -> 'a
+
+  (** Return all key-value pairs as a list. *)
+  val to_pairs : t -> (Janet.t * Janet.t) list
 end
 
 and Fiber : sig
@@ -151,6 +190,13 @@ and Fiber : sig
   val continue_signal : t -> Janet.t -> janet_signal -> janet_signal * Janet.t
   val step : t -> Janet.t -> janet_signal * Janet.t
   val set_env : t -> Table.t -> unit
+
+  (** Inject [msg] as an error into [fiber]. The error surfaces when the fiber
+      is next resumed. Equivalent to Janet's [(cancel fiber msg)]. *)
+  val cancel : t -> Janet.t -> unit
+
+  (** Return true if the fiber can be resumed (status New or Pending). *)
+  val can_resume : t -> bool
 end
 
 and Compile_result : sig
@@ -259,6 +305,12 @@ and Env : sig
 
   val core_env : replacements:t option -> t
 
+  (** Bind [name] to [value] as an immutable def in [env]. *)
+  val def : t -> ?doc:string option -> string -> Janet.t -> unit
+
+  (** Bind [name] to [value] as a mutable var in [env]. *)
+  val var : t -> ?doc:string option -> string -> Janet.t -> unit
+
   module Binding : sig
     type env = t
 
@@ -338,5 +390,29 @@ val of_ptr : ptr -> t
 val to_ptr : t -> ptr
 val create : unit -> t
 val create_ptr : unit -> ptr
+val with_root : t -> f:(t -> 'a) -> 'a
+
+(** Wrap an OCaml [int64] as a Janet s64 abstract value. *)
+val wrap_s64 : int64 -> t
+
+(** Wrap a [uint64] as a Janet u64 abstract value. *)
+val wrap_u64 : Unsigned.uint64 -> t
+
+(** Unwrap a Janet s64 value. Call only when the value is known to be s64. *)
+val unwrap_s64 : t -> int64
+
+(** Unwrap a Janet u64 value. Call only when the value is known to be u64. *)
+val unwrap_u64 : t -> Unsigned.uint64
+
+(** Human-readable description of a Janet value (like Janet's [describe]). *)
+val to_string : t -> string
+
+(** String conversion of a Janet value (like Janet's [string]).
+    For string values returns raw content; for others equivalent to [to_string]. *)
+val to_string_value : t -> string
+
+(** Pretty-print a Janet value. [depth] controls nesting depth (default 4). *)
+val pretty : ?depth:int -> t -> string
+
 val sexp_of_t : Janet.t -> Sexplib0.Sexp.t
 val t_of_sexp : Sexplib0.Sexp.t -> Janet.t

@@ -42,4 +42,23 @@ module Make (I : Janet_sig.S) = struct
   let of_array (values : I.t array) : t = of_list (Array.to_list values)
   let wrap (arr : t) : I.t = F.janet_wrap_array arr
   let unwrap (j : I.t) : t = F.janet_unwrap_array j
+
+  (** Ensure the array has at least [capacity] slots, growing by [growth] factor
+      if a reallocation is needed. *)
+  let ensure (arr : t) ~(capacity : int) ~(growth : int) : unit =
+    F.janet_array_ensure arr (Int32.of_int capacity) (Int32.of_int growth)
+  ;;
+
+  (** Set the logical count of the array, truncating or zero-padding as needed. *)
+  let set_count (arr : t) (n : int) : unit =
+    F.janet_array_setcount arr (Int32.of_int n)
+  ;;
+
+  (** Create a Janet array from an OCaml array of Janet values, using the C
+      [janet_array_n] constructor (single allocation). *)
+  let of_janet_array (values : I.t array) : t =
+    let n = Array.length values in
+    let c_arr = Ctypes.CArray.of_list T.janet (Array.to_list values) in
+    F.janet_array_n (Ctypes.CArray.start c_arr) (Int32.of_int n)
+  ;;
 end
