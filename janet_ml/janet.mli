@@ -18,6 +18,7 @@ and Array : sig
   type t = Type.array
 
   val sexp_of_t : t -> Core.Sexp.t
+  val t_of_sexp : Core.Sexp.t -> t
   val create : int -> t
   val push : t -> Janet.t -> unit
   val pop : t -> Janet.t
@@ -38,6 +39,7 @@ and Buffer : sig
   type t = Type.buffer
 
   val sexp_of_t : t -> Core.Sexp.t
+  val t_of_sexp : Core.Sexp.t -> t
   val create : int -> t
   val deinit : t -> unit
   val ensure : t -> capacity:int -> growth:int -> unit
@@ -227,6 +229,7 @@ and Tuple : sig
   type t = Type.tuple
 
   val sexp_of_t : t -> Core.Sexp.t
+  val t_of_sexp : Core.Sexp.t -> t
   val set : t -> int -> Janet.t -> unit
   val of_list : Janet.t list -> t
   val of_array : Janet.t array -> t
@@ -319,10 +322,12 @@ and Unwrapped : sig
     | Pointer of Pointer.t
 
   val sexp_of_t : t -> Sexplib0.Sexp.t
+  val t_of_sexp : Sexplib0.Sexp.t -> t
 
   type janet_type
 
   val check_type : janet -> Janet_c.Function_description.Types.janet_type
+  val to_janet : t -> Janet.t
   val of_janet : Janet.t -> t
 end
 
@@ -334,3 +339,4 @@ val to_ptr : t -> ptr
 val create : unit -> t
 val create_ptr : unit -> ptr
 val sexp_of_t : Janet.t -> Sexplib0.Sexp.t
+val t_of_sexp : Sexplib0.Sexp.t -> Janet.t

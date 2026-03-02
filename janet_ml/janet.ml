@@ -48,18 +48,21 @@ module Array = struct
   include Array_
 
   let sexp_of_t t = wrap t |> Unwrapped.of_janet |> Unwrapped.sexp_of_t
+  let t_of_sexp s = Unwrapped.t_of_sexp s |> Unwrapped.to_janet |> unwrap
 end
 
 module Buffer = struct
   include Buffer_
 
   let sexp_of_t t = wrap t |> Unwrapped.of_janet |> Unwrapped.sexp_of_t
+  let t_of_sexp s = Unwrapped.t_of_sexp s |> Unwrapped.to_janet |> unwrap
 end
 
 module Tuple = struct
   include Tuple_
 
   let sexp_of_t t = wrap t |> Unwrapped.of_janet |> Unwrapped.sexp_of_t
+  let t_of_sexp s = Unwrapped.t_of_sexp s |> Unwrapped.to_janet |> unwrap
 end
 
 module Struct = struct
@@ -71,3 +74,4 @@ end
 include Janet
 
 let sexp_of_t t = Unwrapped.(sexp_of_t (of_janet t))
+let t_of_sexp s = Unwrapped.(t_of_sexp s |> to_janet)

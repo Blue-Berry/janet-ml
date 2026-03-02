@@ -34,11 +34,55 @@ module Make (I : Janet_sig.S) = struct
     | Pointer of Janet_pointer.t
   [@@deriving sexp_of]
 
+  let rec t_of_sexp (sexp : Sexp.t) : t =
+    match sexp with
+    | Atom "Nil" -> Nil
+    | List [ Atom "Number"; n ] -> Number (Float.t_of_sexp n)
+    | List [ Atom "Boolean"; b ] -> Boolean (Bool.t_of_sexp b)
+    | List [ Atom "String"; s ] -> String (String.t_of_sexp s)
+    | List [ Atom "Symbol"; s ] -> Symbol (String.t_of_sexp s)
+    | List [ Atom "Keyword"; s ] -> Keyword (String.t_of_sexp s)
+    | List [ Atom "Buffer"; b ] -> Buffer (Bytes.t_of_sexp b)
+    | List [ Atom "Array"; List items ] -> Array (List.map ~f:t_of_sexp items)
+    | List [ Atom "Tuple"; List items ] -> Tuple (List.map ~f:t_of_sexp items)
+    | _ -> Sexplib0.Sexp_conv_error.no_matching_variant_found "Unwrapped.t" sexp
+  ;;
+
   type janet_type = T.janet_type
 
   let check_type (janet : janet) = F.janet_type janet
 
-  let rec of_janet (janet : janet) =
+  let rec to_janet (t : t) : janet =
+    match t with
+    | Number f -> F.janet_wrap_number f
+    | Nil -> F.janet_wrap_nil ()
+    | Boolean b -> F.janet_wrap_boolean (if b then 1 else 0)
+    | Fiber f -> Janet_fiber.wrap f
+    | String s ->
+      (match F.janet_cstring s with
+       | Some jstr -> F.janet_wrap_string jstr
+       | None -> F.janet_wrap_nil ())
+    | Symbol s -> F.janet_wrap_symbol (F.janet_csymbol s)
+    | Keyword s -> F.janet_wrap_keyword (F.janet_csymbol s)
+    | Array items ->
+      let arr = Janet_array.create (List.length items) in
+      List.iter ~f:(fun x -> Janet_array.push arr (to_janet x)) items;
+      Janet_array.wrap arr
+    | Tuple items ->
+      let tup = Janet_tuple.of_list (List.map ~f:to_janet items) in
+      Janet_tuple.wrap tup
+    | Table tbl -> Janet_table.wrap tbl
+    | Struct st -> Janet_struct.wrap st
+    | Buffer b ->
+      let buf = Janet_buffer.create (Bytes.length b) in
+      Janet_buffer.push_bytes buf b;
+      Janet_buffer.wrap buf
+    | Function f -> F.janet_wrap_function f
+    | CFunction f -> F.janet_wrap_cfunction f
+    | Abstract a -> F.janet_wrap_abstract a
+    | Pointer p -> F.janet_wrap_pointer p
+
+  and of_janet (janet : janet) =
     match F.janet_type janet with
     | T.Number -> Number (F.janet_unwrap_number janet)
     | T.Nil -> Nil
