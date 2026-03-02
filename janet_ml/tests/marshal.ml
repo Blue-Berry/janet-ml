@@ -71,8 +71,5 @@ let%expect_test "Test resolve and call janet function" =
      |> Sexp.to_string_hum
    | _ -> "Not a function")
   |> print_endline;
-  [%expect
-    {|
-    (Number 3)
-    |}]
+  [%expect {| (Number 3) |}]
 ;;

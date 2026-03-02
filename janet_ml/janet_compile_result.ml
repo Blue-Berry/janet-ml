@@ -9,9 +9,7 @@ module Make (I : Janet_sig.S) = struct
     | Ok
     | Error
 
-  let funcdef (res : t) : [ `janet_funcdef ] Ctypes.structure Ctypes_static.ptr =
-    Ctypes.getf res T.Janet_Compile_Result.funcdef
-  ;;
+  let funcdef (res : t) : Type.funcdef = Ctypes.getf res T.Janet_Compile_Result.funcdef
 
   let error (res : t) : Unsigned.UInt8.t Ctypes_static.ptr =
     Ctypes.getf res T.Janet_Compile_Result.error

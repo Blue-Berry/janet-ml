@@ -15,7 +15,7 @@ module Make (I : Janet_sig.S) = struct
 
   type result = (funcdef, error) Stdlib.result
 
-  let extract_result res =
+  let extract_result res : result =
     match Janet_compile_result.status res with
     | Janet_compile_result.Ok -> Ok (Janet_compile_result.funcdef res)
     | Janet_compile_result.Error ->
