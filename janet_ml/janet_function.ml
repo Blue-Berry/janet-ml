@@ -6,10 +6,7 @@ module Make (I : Janet_sig.S) = struct
   type t = Type.function_t
 
   let (to_janet : t -> I.t) = F.janet_wrap_function
-
-  let sexp_of_t t =
-    Sexp.List [ Sexp.Atom "Function"; to_janet t |> I.to_string |> Sexp.of_string ]
-  ;;
+  let sexp_of_t t = Sexp.Atom (to_janet t |> I.to_string)
 
   let pcall (f : t) (args : I.t list) ?(fiber : Type.fiber option = None) () =
     let argn = Int32.of_int_exn (List.length args) in

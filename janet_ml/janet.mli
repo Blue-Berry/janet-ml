@@ -22,15 +22,6 @@ module rec Janet : sig
   val of_keyword : string -> t
   val of_symbol : string -> t
 
-  (* -- Extraction (option-returning) -- *)
-
-  val to_float : t -> float option
-  val to_int : t -> int option
-  val to_bool : t -> bool option
-  val to_string_opt : t -> string option
-  val to_keyword : t -> string option
-  val to_symbol : t -> string option
-
   (* -- Predicates / inspection -- *)
 
   type janet_type = Janet_c.C.Types.janet_type
@@ -212,7 +203,11 @@ and Fiber : sig
 
   val sexp_of_status : status -> Sexplib0.Sexp.t
 
-  type janet_signal = Janet_c.C.Types.janet_signal
+  type janet_signal =
+    | Signal_ok
+    | Signal_error
+    | Signal_debug
+    | Signal_yield
 
   val create : Function.t -> capacity:int -> argv:Janet.t list -> t
   val reset : t -> Function.t -> argv:Janet.t list -> t
@@ -448,15 +443,6 @@ val of_bool : bool -> t
 val of_string : string -> t
 val of_keyword : string -> t
 val of_symbol : string -> t
-
-(* -- Extraction (option-returning) -- *)
-
-val to_float : t -> float option
-val to_int : t -> int option
-val to_bool : t -> bool option
-val to_string_opt : t -> string option
-val to_keyword : t -> string option
-val to_symbol : t -> string option
 
 (* -- Predicates / inspection -- *)
 

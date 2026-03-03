@@ -35,7 +35,7 @@ module Make (I : Janet_sig.S) = struct
     | Abstract of Janet_abstract.t
     | Pointer of Janet_pointer.t
 
-  let rec sexp_of_t = function
+  let rec sexp_of_t : t -> Sexp.t = function
     | Number f -> Sexp.List [ Sexp.Atom "Number"; Float.sexp_of_t f ]
     | Nil -> Sexp.Atom "Nil"
     | Boolean b -> Sexp.List [ Sexp.Atom "Boolean"; Bool.sexp_of_t b ]
@@ -45,8 +45,20 @@ module Make (I : Janet_sig.S) = struct
     | Keyword s -> Sexp.List [ Sexp.Atom "Keyword"; String.sexp_of_t s ]
     | Array items -> Sexp.List [ Sexp.Atom "Array"; List.sexp_of_t sexp_of_t items ]
     | Tuple items -> Sexp.List [ Sexp.Atom "Tuple"; List.sexp_of_t sexp_of_t items ]
-    | Table t -> Sexp.List [ Sexp.Atom "Table"; Janet_table.sexp_of_t t ]
-    | Struct s -> Sexp.List [ Sexp.Atom "Struct"; Janet_struct.sexp_of_t s ]
+    | Table t ->
+      let pairs =
+        Janet_table.to_pairs t
+        |> List.map ~f:(fun (k, v) ->
+          Sexp.List [ of_janet k |> sexp_of_t; of_janet v |> sexp_of_t ])
+      in
+      Sexp.List [ Sexp.Atom "Table"; Sexp.List pairs ]
+    | Struct s ->
+      let pairs =
+        Janet_struct.to_pairs s
+        |> List.map ~f:(fun (k, v) ->
+          Sexp.List [ of_janet k |> sexp_of_t; of_janet v |> sexp_of_t ])
+      in
+      Sexp.List [ Sexp.Atom "Struct"; Sexp.List pairs ]
     | Buffer b -> Sexp.List [ Sexp.Atom "Buffer"; Bytes.sexp_of_t b ]
     | Function f -> Sexp.List [ Sexp.Atom "Function"; Janet_function.sexp_of_t f ]
     | CFunction f -> Sexp.List [ Sexp.Atom "CFunction"; Janet_cfunction.sexp_of_t f ]
@@ -55,9 +67,8 @@ module Make (I : Janet_sig.S) = struct
       Sexp.List [ Sexp.Atom "UInt"; Int64.sexp_of_t (Unsigned.UInt64.to_int64 u) ]
     | Abstract a -> Sexp.List [ Sexp.Atom "Abstract"; Janet_abstract.sexp_of_t a ]
     | Pointer p -> Sexp.List [ Sexp.Atom "Pointer"; Janet_pointer.sexp_of_t p ]
-  ;;
 
-  let rec t_of_sexp (sexp : Sexp.t) : t =
+  and t_of_sexp (sexp : Sexp.t) : t =
     match sexp with
     | Atom "Nil" -> Nil
     | List [ Atom "Number"; n ] -> Number (Float.t_of_sexp n)
@@ -71,13 +82,8 @@ module Make (I : Janet_sig.S) = struct
     | List [ Atom "Int"; i ] -> Int (Int64.t_of_sexp i)
     | List [ Atom "UInt"; u ] -> UInt (Unsigned.UInt64.of_int64 (Int64.t_of_sexp u))
     | _ -> Sexplib0.Sexp_conv_error.no_matching_variant_found "Unwrapped.t" sexp
-  ;;
 
-  type janet_type = T.janet_type
-
-  let check_type (janet : janet) = F.janet_type janet
-
-  let rec to_janet (t : t) : janet =
+  and to_janet (t : t) : janet =
     match t with
     | Number f -> F.janet_wrap_number f
     | Nil -> F.janet_wrap_nil ()
@@ -139,4 +145,8 @@ module Make (I : Janet_sig.S) = struct
       let tup = Janet_tuple.unwrap janet in
       Tuple (Janet_tuple.to_list tup |> List.map ~f:of_janet)
   ;;
+
+  type janet_type = T.janet_type
+
+  let check_type (janet : janet) = F.janet_type janet
 end

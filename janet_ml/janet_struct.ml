@@ -61,11 +61,7 @@ module Make (I : Janet_sig.S) = struct
   (* Wrap/unwrap convert between head pointer and Janet value *)
   let wrap (st : t) : I.t = F.janet_wrap_struct (data_of_head st)
   let to_janet = wrap
-
-  let sexp_of_t t =
-    Sexp.List [ Sexp.Atom "Struct"; to_janet t |> I.to_string |> Sexp.of_string ]
-  ;;
-
+  let sexp_of_t t = Sexp.Atom (to_janet t |> I.to_string)
   let unwrap (j : I.t) : t = head_of_data (F.janet_unwrap_struct j)
 
   let of_pairs (pairs : (I.t * I.t) list) : t =

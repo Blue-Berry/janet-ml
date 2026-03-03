@@ -20,7 +20,11 @@ module Make (I : Janet_sig.S) = struct
     | User of int
   [@@deriving sexp_of]
 
-  type janet_signal = T.janet_signal
+  type janet_signal = T.janet_signal =
+    | Signal_ok
+    | Signal_error
+    | Signal_debug
+    | Signal_yield
 
   let create (callee : Janet_function.t) ~capacity ~(argv : I.t list) : t =
     let argc = List.length argv in

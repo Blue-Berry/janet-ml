@@ -36,44 +36,6 @@ module Janet = struct
   let of_keyword (s : string) : t = F.janet_wrap_keyword (F.janet_csymbol s)
   let of_symbol (s : string) : t = F.janet_wrap_symbol (F.janet_csymbol s)
 
-  (* -- Extraction (option-returning) -- *)
-
-  let to_float (v : t) : float option =
-    match F.janet_type v with
-    | T.Number -> Some (F.janet_unwrap_number v)
-    | _ -> None
-  ;;
-
-  let to_int (v : t) : int option =
-    match F.janet_type v with
-    | T.Number -> Some (Float.to_int (F.janet_unwrap_number v))
-    | _ -> None
-  ;;
-
-  let to_bool (v : t) : bool option =
-    match F.janet_type v with
-    | T.Boolean -> Some (not (phys_equal (F.janet_unwrap_boolean v) 0))
-    | _ -> None
-  ;;
-
-  let to_string_opt (v : t) : string option =
-    match F.janet_type v with
-    | T.String -> Some (F.janet_unwrap_string v)
-    | _ -> None
-  ;;
-
-  let to_keyword (v : t) : string option =
-    match F.janet_type v with
-    | T.Keyword -> Some (F.janet_unwrap_keyword v)
-    | _ -> None
-  ;;
-
-  let to_symbol (v : t) : string option =
-    match F.janet_type v with
-    | T.Symbol -> Some (F.janet_unwrap_symbol v)
-    | _ -> None
-  ;;
-
   (** Return a human-readable description of a Janet value (equivalent to
     Janet's [(describe v)]). *)
   let to_string (v : t) : string = F.janet_description v

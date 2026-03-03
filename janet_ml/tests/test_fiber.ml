@@ -11,10 +11,10 @@ let lookup_fn env name =
 ;;
 
 let signal_name = function
-  | Janet_c.C.Types.Signal_ok -> "ok"
-  | Janet_c.C.Types.Signal_error -> "error"
-  | Janet_c.C.Types.Signal_debug -> "debug"
-  | Janet_c.C.Types.Signal_yield -> "yield"
+  | Fiber.Signal_ok -> "ok"
+  | Fiber.Signal_error -> "error"
+  | Fiber.Signal_debug -> "debug"
+  | Fiber.Signal_yield -> "yield"
 ;;
 
 let%expect_test "a freshly created fiber has status New" =
@@ -140,7 +140,7 @@ let%expect_test "driving a generator fiber through all yields" =
       then (
         let sig_, v = Fiber.continue fiber (create ()) in
         match sig_ with
-        | Janet_c.C.Types.Signal_yield ->
+        | Fiber.Signal_yield ->
           results
           := (v |> Unwrapped.of_janet |> Unwrapped.sexp_of_t |> Sexp.to_string_hum)
              :: !results;
