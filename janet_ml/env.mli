@@ -4,10 +4,10 @@ module Make (I : Janet_sig.S) : sig
   val core_env : replacements:t option -> t
 
   (** Bind [name] to [value] as an immutable def in [env]. *)
-  val def : t -> ?doc:string option -> string -> I.t -> unit
+  val def : t -> ?doc:string -> string -> I.t -> unit
 
   (** Bind [name] to [value] as a mutable var in [env]. *)
-  val var : t -> ?doc:string option -> string -> I.t -> unit
+  val var : t -> ?doc:string -> string -> I.t -> unit
 
   module Binding : sig
     type env = t

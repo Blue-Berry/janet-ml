@@ -38,10 +38,7 @@ let%expect_test "Env.def with an array value" =
   with_janet_env (fun env ->
     let arr =
       Array.of_list
-        [ Unwrapped.to_janet (Unwrapped.Number 1.0)
-        ; Unwrapped.to_janet (Unwrapped.Number 2.0)
-        ; Unwrapped.to_janet (Unwrapped.Number 3.0)
-        ]
+        Unwrapped.[ to_janet (Number 1.0); to_janet (Number 2.0); to_janet (Number 3.0) ]
     in
     Env.def env "my-array" (Array.wrap arr);
     Janet_ml.dostring_exn ~env "(length my-array)" ~source_path:None

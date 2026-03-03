@@ -27,10 +27,8 @@ let%expect_test "Table.of_pairs creates a table accessible from Janet" =
 let%expect_test "Table.of_pairs from an empty list creates an empty table" =
   with_janet_env (fun _env ->
     let tbl = Table.of_pairs [] in
-    match Table.count tbl with
-    | Some 0 -> print_endline "empty"
-    | Some n -> Printf.printf "count=%d\n" n
-    | None -> print_endline "None");
+    let n = Table.count tbl in
+    if n = 0 then print_endline "empty" else Printf.printf "count=%d\n" n);
   [%expect {| empty |}]
 ;;
 

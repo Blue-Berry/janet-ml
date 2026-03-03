@@ -11,6 +11,32 @@ module rec Janet : sig
       afterwards even if [f] raises. Use this to keep a [Janet.t] alive across
       any allocating Janet operation. *)
   val with_root : t -> f:(t -> 'a) -> 'a
+
+  (* -- Convenience constructors -- *)
+
+  val nil : t
+  val of_float : float -> t
+  val of_int : int -> t
+  val of_bool : bool -> t
+  val of_string : string -> t
+  val of_keyword : string -> t
+  val of_symbol : string -> t
+
+  (* -- Extraction (option-returning) -- *)
+
+  val to_float : t -> float option
+  val to_int : t -> int option
+  val to_bool : t -> bool option
+  val to_string_opt : t -> string option
+  val to_keyword : t -> string option
+  val to_symbol : t -> string option
+
+  (* -- Predicates / inspection -- *)
+
+  type janet_type = Janet_c.C.Types.janet_type
+
+  val is_nil : t -> bool
+  val typeof : t -> janet_type
 end
 
 and Abstract : sig
@@ -47,6 +73,9 @@ and Array : sig
 
   (** Create a Janet array from an OCaml array using a single C allocation. *)
   val of_janet_array : Janet.t array -> t
+
+  (** Lazy sequence over the array elements. *)
+  val to_seq : t -> Janet.t Seq.t
 end
 
 and Buffer : sig
@@ -109,8 +138,8 @@ and Struct : sig
   val begin_ : int -> t
   val put : t -> Janet.t -> Janet.t -> unit
   val end_ : t -> t
-  val get : t -> Janet.t -> Janet.t
-  val rawget : t -> Janet.t -> Janet.t
+  val get : t -> key:Janet.t -> Janet.t
+  val rawget : t -> key:Janet.t -> Janet.t
   val to_table : t -> Table.t
   val find : t -> Janet.t -> Kv.t
   val length : t -> int
@@ -129,6 +158,9 @@ and Struct : sig
 
   (** Return all key-value pairs as a list. *)
   val to_pairs : t -> (Janet.t * Janet.t) list
+
+  (** Lazy sequence over key-value pairs. *)
+  val to_seq : t -> (Janet.t * Janet.t) Seq.t
 end
 
 and Table : sig
@@ -145,8 +177,8 @@ and Table : sig
   val merge_table : t -> t -> unit
   val merge_struct : t -> Struct.t -> unit
   val find : t -> key:Janet.t -> Kv.t
-  val count : t -> int option
-  val capacity : t -> int option
+  val count : t -> int
+  val capacity : t -> int
   val proto : t -> t option
   val wrap : t -> Janet.t
   val unwrap : Janet.t -> t
@@ -159,6 +191,9 @@ and Table : sig
 
   (** Return all key-value pairs as a list. *)
   val to_pairs : t -> (Janet.t * Janet.t) list
+
+  (** Lazy sequence over key-value pairs. *)
+  val to_seq : t -> (Janet.t * Janet.t) Seq.t
 end
 
 and Fiber : sig
@@ -288,6 +323,9 @@ and Tuple : sig
   val to_array : t -> Janet.t array
   val wrap : t -> Janet.t
   val unwrap : Janet.t -> t
+
+  (** Lazy sequence over the tuple elements. *)
+  val to_seq : t -> Janet.t Seq.t
 end
 
 and Vm : sig
@@ -306,10 +344,10 @@ and Env : sig
   val core_env : replacements:t option -> t
 
   (** Bind [name] to [value] as an immutable def in [env]. *)
-  val def : t -> ?doc:string option -> string -> Janet.t -> unit
+  val def : t -> ?doc:string -> string -> Janet.t -> unit
 
   (** Bind [name] to [value] as a mutable var in [env]. *)
-  val var : t -> ?doc:string option -> string -> Janet.t -> unit
+  val var : t -> ?doc:string -> string -> Janet.t -> unit
 
   module Binding : sig
     type env = t
@@ -370,6 +408,8 @@ and Unwrapped : sig
     | Buffer of bytes
     | Function of Function.t
     | CFunction of Cfunction.t
+    | Int of int64
+    | UInt of Unsigned.uint64
     | Abstract of Abstract.t
     | Pointer of Pointer.t
 
@@ -391,6 +431,32 @@ val to_ptr : t -> ptr
 val create : unit -> t
 val create_ptr : unit -> ptr
 val with_root : t -> f:(t -> 'a) -> 'a
+
+(* -- Convenience constructors -- *)
+
+val nil : t
+val of_float : float -> t
+val of_int : int -> t
+val of_bool : bool -> t
+val of_string : string -> t
+val of_keyword : string -> t
+val of_symbol : string -> t
+
+(* -- Extraction (option-returning) -- *)
+
+val to_float : t -> float option
+val to_int : t -> int option
+val to_bool : t -> bool option
+val to_string_opt : t -> string option
+val to_keyword : t -> string option
+val to_symbol : t -> string option
+
+(* -- Predicates / inspection -- *)
+
+type janet_type = Janet_c.C.Types.janet_type
+
+val is_nil : t -> bool
+val typeof : t -> janet_type
 
 (** Wrap an OCaml [int64] as a Janet s64 abstract value. *)
 val wrap_s64 : int64 -> t
@@ -414,5 +480,18 @@ val to_string_value : t -> string
 (** Pretty-print a Janet value. [depth] controls nesting depth (default 4). *)
 val pretty : ?depth:int -> t -> string
 
+(* -- Generic operations -- *)
+
+val equal : t -> t -> bool
+val length : t -> int
+val get : t -> t -> t
+val put : t -> key:t -> value:t -> unit
+val truthy : t -> bool
+val gc_collect : unit -> unit
+
+(* -- Dynamic bindings -- *)
+
+val dyn : string -> t
+val setdyn : string -> t -> unit
 val sexp_of_t : Janet.t -> Sexplib0.Sexp.t
 val t_of_sexp : Sexplib0.Sexp.t -> Janet.t

@@ -25,12 +25,15 @@ val dostring
 val dostring_exn : env:Janet.Table.t -> string -> source_path:string option -> Janet.t
 
 (** Evaluate Janet bytecode. Returns the signal and the result/error value. *)
-val dobytes : Janet.Table.t -> bytes -> string option -> signal * Janet.t
+val dobytes : env:Janet.Table.t -> bytes -> source_path:string option -> signal * Janet.t
 
 (** Like [dobytes] but raises [Janet_error] on any non-ok signal. *)
-val dobytes_exn : Janet.Table.t -> bytes -> string option -> Janet.t
+val dobytes_exn : env:Janet.Table.t -> bytes -> source_path:string option -> Janet.t
 
 val mcall : string -> Janet.t list -> Janet.t
+
+(** Like [mcall] but wraps the call for a consistent exception-based interface. *)
+val mcall_exn : string -> Janet.t list -> Janet.t
 
 module JanetCfun : Foreign.Funptr with type fn = int32 -> Janet.t Ctypes.ptr -> Janet.t
 

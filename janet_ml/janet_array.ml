@@ -59,4 +59,10 @@ module Make (I : Janet_sig.S) = struct
     let c_arr = Ctypes.CArray.of_list T.janet (Array.to_list values) in
     F.janet_array_n (Ctypes.CArray.start c_arr) (Int32.of_int n)
   ;;
+
+  let to_seq (arr : t) : I.t Seq.t =
+    let n = count arr in
+    let rec at i () = if i >= n then Seq.Nil else Seq.Cons (get arr i, at (i + 1)) in
+    at 0
+  ;;
 end

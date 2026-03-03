@@ -68,6 +68,22 @@ module Types (F : Ctypes.TYPE) = struct
       ]
   ;;
 
+  (* JanetIntType enum — used by janet_is_int to classify abstract int values *)
+  type janet_int_type =
+    | Int_none
+    | Int_s64
+    | Int_u64
+
+  let janet_int_type_enum =
+    enum
+      "JanetIntType"
+      ~typedef:true
+      [ Int_none, constant "JANET_INT_NONE" int64_t
+      ; Int_s64, constant "JANET_INT_S64" int64_t
+      ; Int_u64, constant "JANET_INT_U64" int64_t
+      ]
+  ;;
+
   (* Janet value - non-nanbox struct layout:
      struct Janet {
        union { uint64_t u64; double number; int32_t integer;

@@ -37,10 +37,10 @@ module Make (I : Janet_sig.S) = struct
   ;;
 
   let find (tbl : t) ~(key : I.t) : Janet_kv.t = F.janet_table_find tbl key
-  let count (tbl : t) = Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.count |> Int32.to_int
+  let count (tbl : t) = Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.count |> Int32.to_int_exn
 
   let capacity (tbl : t) =
-    Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.capacity |> Int32.to_int
+    Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.capacity |> Int32.to_int_exn
   ;;
 
   let proto (tbl : t) : t option = Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.proto
@@ -73,5 +73,21 @@ module Make (I : Janet_sig.S) = struct
 
   let to_pairs (tbl : t) : (I.t * I.t) list =
     fold tbl ~init:[] ~f:(fun acc k v -> (k, v) :: acc) |> List.rev
+  ;;
+
+  let to_seq (tbl : t) : (I.t * I.t) Seq.t =
+    let kvs = Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.data in
+    let cap = Ctypes.getf Ctypes.(!@tbl) T.Janet_Table.capacity |> Int32.to_int_exn in
+    let null_kv = Ctypes.from_voidp T.janet_kv Ctypes.null in
+    let rec next cur () =
+      let kv_ptr = F.janet_dictionary_next kvs (Int32.of_int_exn cap) cur in
+      if Ctypes.is_null kv_ptr
+      then Seq.Nil
+      else (
+        let kv = Ctypes.(!@kv_ptr) in
+        Seq.Cons
+          ((Ctypes.getf kv T.janet_kv_key, Ctypes.getf kv T.janet_kv_value), next kv_ptr))
+    in
+    next null_kv
   ;;
 end

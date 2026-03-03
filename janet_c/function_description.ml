@@ -529,6 +529,9 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_gcroot = foreign "janet_gcroot" (janet @-> returning void)
   let janet_gcunroot = foreign "janet_gcunroot" (janet @-> returning int)
 
+  (* Integer type classification *)
+  let janet_is_int = foreign "janet_is_int" (janet @-> returning Types.janet_int_type_enum)
+
   (* Comparison and utility *)
   let janet_equals = foreign "janet_equals" (janet @-> janet @-> returning int)
   let janet_length = foreign "janet_length" (janet @-> returning int32_t)
@@ -616,6 +619,10 @@ module Functions (F : Ctypes.FOREIGN) = struct
        @-> ptr janet
        @-> returning janet_binding_type_enum)
   ;;
+
+  (* Dynamic bindings *)
+  let janet_dyn = foreign "janet_dyn" (string @-> returning janet)
+  let janet_setdyn = foreign "janet_setdyn" (string @-> janet @-> returning void)
 
   (* TODO: Remaining JANET_API functions to bind
    *

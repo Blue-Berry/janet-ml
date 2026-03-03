@@ -10,13 +10,13 @@ module Make (I : Janet_sig.S) = struct
 
   (** Bind [name] to [value] as an immutable def in [env].
       An optional [doc] string is attached as metadata. *)
-  let def (env : t) ?(doc : string option = None) (name : string) (value : I.t) : unit =
+  let def (env : t) ?doc (name : string) (value : I.t) : unit =
     F.janet_def env name value doc
   ;;
 
   (** Bind [name] to [value] as a mutable var in [env].
       An optional [doc] string is attached as metadata. *)
-  let var (env : t) ?(doc : string option = None) (name : string) (value : I.t) : unit =
+  let var (env : t) ?doc (name : string) (value : I.t) : unit =
     F.janet_var env name value doc
   ;;
 

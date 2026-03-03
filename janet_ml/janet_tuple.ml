@@ -61,4 +61,10 @@ module Make (I : Janet_sig.S) = struct
   (* Wrap/unwrap convert between head pointer and Janet value *)
   let wrap (tup : t) : I.t = F.janet_wrap_tuple (data_of_head tup)
   let unwrap (j : I.t) : t = head_of_data (F.janet_unwrap_tuple j)
+
+  let to_seq (tup : t) : I.t Seq.t =
+    let n = length tup in
+    let rec at i () = if i >= n then Seq.Nil else Seq.Cons (get tup i, at (i + 1)) in
+    at 0
+  ;;
 end

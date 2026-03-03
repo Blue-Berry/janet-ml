@@ -31,8 +31,8 @@ module Make (I : Janet_sig.S) = struct
   let end_ (st : t) : t = head_of_data (F.janet_struct_end (data_of_head st))
 
   (* Lookup *)
-  let get (st : t) (key : I.t) : I.t = F.janet_struct_get (data_of_head st) key
-  let rawget (st : t) (key : I.t) : I.t = F.janet_struct_rawget (data_of_head st) key
+  let get (st : t) ~(key : I.t) : I.t = F.janet_struct_get (data_of_head st) key
+  let rawget (st : t) ~(key : I.t) : I.t = F.janet_struct_rawget (data_of_head st) key
 
   (* Conversion *)
   let to_table (st : t) : [ `janet_table ] Ctypes.structure Ctypes_static.ptr =
@@ -91,5 +91,21 @@ module Make (I : Janet_sig.S) = struct
 
   let to_pairs (st : t) : (I.t * I.t) list =
     fold st ~init:[] ~f:(fun acc k v -> (k, v) :: acc) |> List.rev
+  ;;
+
+  let to_seq (st : t) : (I.t * I.t) Seq.t =
+    let kvs = data_of_head st in
+    let cap = capacity st in
+    let null_kv = Ctypes.from_voidp T.janet_kv Ctypes.null in
+    let rec next cur () =
+      let kv_ptr = F.janet_dictionary_next kvs (Int32.of_int_exn cap) cur in
+      if Ctypes.is_null kv_ptr
+      then Seq.Nil
+      else (
+        let kv = Ctypes.(!@kv_ptr) in
+        Seq.Cons
+          ((Ctypes.getf kv T.janet_kv_key, Ctypes.getf kv T.janet_kv_value), next kv_ptr))
+    in
+    next null_kv
   ;;
 end

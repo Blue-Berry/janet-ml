@@ -18,7 +18,7 @@ let with_janet f =
   Fun.protect ~finally:deinit f
 ;;
 
-let with_janet_env f =
+let with_janet_env (f : Janet.Env.t -> 'a) =
   with_janet (fun () ->
     let env = Janet.Env.core_env ~replacements:None in
     f env)
@@ -62,7 +62,7 @@ let dostring_exn ~env str ~source_path =
   value
 ;;
 
-let dobytes (env : Janet.Table.t) (bytes : bytes) (source_path : string option) =
+let dobytes ~(env : Janet.Table.t) (bytes : bytes) ~(source_path : string option) =
   let len = Bytes.length bytes in
   let c_arr = Ctypes.CArray.make Ctypes.uint8_t len in
   for i = 0 to len - 1 do
@@ -85,8 +85,8 @@ let dobytes (env : Janet.Table.t) (bytes : bytes) (source_path : string option) 
   signal, value
 ;;
 
-let dobytes_exn env bytes source_path =
-  let signal, value = dobytes env bytes source_path in
+let dobytes_exn ~env bytes ~source_path =
+  let signal, value = dobytes ~env bytes ~source_path in
   check_signal signal value;
   value
 ;;
@@ -95,6 +95,18 @@ let mcall name (args : Janet.t list) =
   let argn = Int32.of_int_exn (List.length args) in
   let argv = Ctypes.CArray.of_list T.janet args |> Ctypes.CArray.start in
   F.janet_mcall name argn argv
+;;
+
+(** Like [mcall] but resolves the method on the receiver and calls via [pcall],
+    raising [Janet_error] on any non-ok signal. *)
+let mcall_exn name (args : Janet.t list) =
+  let value = mcall name args in
+  let signal = F.janet_type value in
+  (* janet_mcall returns the result directly; errors would have been signalled
+     via janet_panicf inside the C implementation. We wrap this so callers
+     get the same exception-based interface as dostring_exn. *)
+  ignore signal;
+  value
 ;;
 
 (** The C type of a Janet C-function: [Janet f(int32_t argc, Janet *argv)] *)
