@@ -63,9 +63,6 @@
           buildInputs = devPackages ++ [
             scope'.ctypes-foreign
           ];
-          shellHook = ''
-            source ${scope'.ctypes-foreign}/nix-support/setup-hook
-          '';
         };
       }
     );
