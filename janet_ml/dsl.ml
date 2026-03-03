@@ -1,5 +1,14 @@
+module Janet = Janet
+
 module type S = sig
-  val lib : string
+  val janet_lib : string
+
+  type fun_t =
+    { name : string
+    ; f : Janet.t array -> Janet.t
+    }
+
+  val ext_funs : fun_t list
 end
 
 module Make (S : S) = struct
@@ -9,7 +18,10 @@ module Make (S : S) = struct
 
   let replacements =
     Janet.with_janet_env (fun env ->
-      let _ = Janet.dostring_exn ~env S.lib ~source_path:None in
+      let _ = Janet.dostring_exn ~env S.janet_lib ~source_path:None in
+      List.iter
+        (fun f -> Janet.Cfun.register ~env S.(f.name) S.(f.f) |> ignore)
+        S.ext_funs;
       Janet.Env.core_env ~replacements:env ())
   ;;
 

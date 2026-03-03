@@ -100,20 +100,9 @@ and Cfunction : sig
 end
 
 and Cfun : sig
-  module JanetCfun : sig
-    type fn = int32 -> Janet.ptr -> Janet.t
-    type t
+  type handle
 
-    val t : t Ctypes_static.typ
-    val t_opt : t option Ctypes_static.typ
-    val free : t -> unit
-    val of_fun : fn -> t
-    val with_fun : fn -> (t -> 'c) -> 'c
-  end
-
-  type handle = JanetCfun.t
-
-  val free : JanetCfun.t -> unit
+  val free : handle -> unit
   val register : env:Table.t -> string -> (Janet.t array -> Janet.t) -> handle
 
   val register_raw

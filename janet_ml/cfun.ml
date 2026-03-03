@@ -10,7 +10,6 @@ module JanetCfun = (val Foreign.dynamic_funptr cfun_fn_type)
 
 module Make (I : Janet_sig.S) = struct
   module Env = Env.Make (I)
-  module JanetCfun = JanetCfun
 
   type handle = JanetCfun.t
 
