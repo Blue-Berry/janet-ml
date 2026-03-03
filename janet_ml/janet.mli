@@ -345,13 +345,16 @@ end
 and Env : sig
   type t = Table.t
 
-  val core_env : replacements:t option -> t
+  val core_env : replacements:Table.t option -> t
 
   (** Bind [name] to [value] as an immutable def in [env]. *)
   val def : t -> ?doc:string -> string -> Janet.t -> unit
 
   (** Bind [name] to [value] as a mutable var in [env]. *)
   val var : t -> ?doc:string -> string -> Janet.t -> unit
+
+  val to_janet : t -> Janet.t
+  val sexp_of_t : t -> Core.Sexp.t
 
   module Binding : sig
     type env = t

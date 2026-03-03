@@ -124,3 +124,27 @@ let%expect_test "Binding.lookup finds built-in Janet functions" =
     | _ -> print_endline "not found");
   [%expect {| function |}]
 ;;
+
+let%expect_test "Extend env" =
+  with_janet_env (fun env ->
+    let _ = Janet_ml.dostring_exn ~env "(defn double [x] (* x 2))" ~source_path:None in
+    match Env.Binding.lookup ~env "double" with
+    | Env.Binding.Def v ->
+      let extras = Table.create 4 in
+      Table.put extras ~key:(Janet.of_symbol "double") ~value:v;
+      let env = Env.core_env ~replacements:(Some extras) in
+      let res = Janet_ml.dostring_exn ~env "(double 21)" ~source_path:None in
+      pretty res |> print_endline
+    | _ -> failwith "wrong binding kind");
+  [%expect {| 42 |}]
+;;
+
+(* Just use the prev env as replacements *)
+let%expect_test "Extend env" =
+  with_janet_env (fun env ->
+    let _ = Janet_ml.dostring_exn ~env "(defn double [x] (* x 2))" ~source_path:None in
+    let env = Env.core_env ~replacements:(Some env) in
+    let res = Janet_ml.dostring_exn ~env "(double 21)" ~source_path:None in
+    pretty res |> print_endline);
+  [%expect {| 42 |}]
+;;
