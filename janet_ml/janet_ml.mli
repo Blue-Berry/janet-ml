@@ -1,4 +1,5 @@
 module Janet = Janet
+module Dsl = Dsl
 
 exception Janet_error of string
 
