@@ -4,6 +4,7 @@ module Make (I : Janet_sig.S) = struct
 
   type t = Type.array
 
+  let to_janet : t -> I.t = F.janet_wrap_array
   let create capacity : t = F.janet_array (Int32.of_int capacity)
   let push (arr : t) (value : I.t) = F.janet_array_push arr value
   let pop (arr : t) : I.t = F.janet_array_pop arr

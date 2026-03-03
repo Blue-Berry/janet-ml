@@ -7,7 +7,12 @@ module Make (I : Janet_sig.S) = struct
 
   type t = Type.table
 
-  let sexp_of_t _ = Sexp.of_string "janet_table"
+  let to_janet : t -> I.t = F.janet_wrap_table
+
+  let sexp_of_t t =
+    Sexp.List [ Sexp.Atom "Table"; to_janet t |> I.to_string |> Sexp.of_string ]
+  ;;
+
   let create capacity : t = F.janet_table (Int32.of_int_exn capacity)
   let get (tbl : t) ~(key : I.t) : I.t = F.janet_table_get tbl key
   let rawget (tbl : t) ~(key : I.t) : I.t = F.janet_table_rawget tbl key

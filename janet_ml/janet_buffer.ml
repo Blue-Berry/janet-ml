@@ -4,6 +4,7 @@ module Make (I : Janet_sig.S) = struct
 
   type t = Type.buffer
 
+  let to_janet : t -> I.t = F.janet_wrap_buffer
   let create capacity : t = F.janet_buffer (Int32.of_int capacity)
   let deinit (buf : t) = F.janet_buffer_deinit buf
 

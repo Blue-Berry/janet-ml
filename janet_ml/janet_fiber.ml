@@ -7,6 +7,7 @@ module Make (I : Janet_sig.S) = struct
 
   type t = Type.fiber
 
+  let to_janet : t -> I.t = F.janet_wrap_fiber
   let stacktrace (fiber : t) (err : I.t) = F.janet_stacktrace fiber err
 
   type status =

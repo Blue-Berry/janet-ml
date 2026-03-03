@@ -105,13 +105,13 @@ end
 and Cfunction : sig
   type t = Type.cfunction
 
-  val sexp_of_t : 'a -> Core.Sexp.t
+  val sexp_of_t : t -> Core.Sexp.t
 end
 
 and Function : sig
   type t = Type.function_t
 
-  val sexp_of_t : 'a -> Sexplib0.Sexp.t
+  val sexp_of_t : t -> Sexplib0.Sexp.t
 
   val pcall
     :  t
@@ -127,17 +127,15 @@ and Function : sig
   (** Direct call via [janet_call]. A Janet panic terminates the process;
       prefer [call_exn] or [pcall] for safety. *)
   val call : t -> Janet.t list -> Janet.t
+
+  val to_janet : t -> Janet.t
 end
 
 and Struct : sig
   type t = Type.struct_t
 
   val sexp_of_t : t -> Core.Sexp.t
-  val data_of_head : t -> Kv.t
-  val head_of_data : Kv.t -> t
-  val begin_ : int -> t
   val put : t -> Janet.t -> Janet.t -> unit
-  val end_ : t -> t
   val get : t -> key:Janet.t -> Janet.t
   val rawget : t -> key:Janet.t -> Janet.t
   val to_table : t -> Table.t
@@ -149,6 +147,7 @@ and Struct : sig
   val wrap : t -> Janet.t
   val unwrap : Janet.t -> t
   val of_pairs : (Janet.t * Janet.t) list -> t
+  val to_janet : t -> Janet.t
 
   (** Iterate over all key-value pairs in the struct. *)
   val iter : t -> f:(Janet.t -> Janet.t -> unit) -> unit
@@ -182,6 +181,7 @@ and Table : sig
   val proto : t -> t option
   val wrap : t -> Janet.t
   val unwrap : Janet.t -> t
+  val to_janet : t -> Janet.t
 
   (** Iterate over all key-value pairs in the table. *)
   val iter : t -> f:(Janet.t -> Janet.t -> unit) -> unit
@@ -225,6 +225,7 @@ and Fiber : sig
   val continue_signal : t -> Janet.t -> janet_signal -> janet_signal * Janet.t
   val step : t -> Janet.t -> janet_signal * Janet.t
   val set_env : t -> Table.t -> unit
+  val to_janet : t -> Janet.t
 
   (** Inject [msg] as an error into [fiber]. The error surfaces when the fiber
       is next resumed. Equivalent to Janet's [(cancel fiber msg)]. *)
@@ -303,7 +304,9 @@ end
 and Pointer : sig
   type t = Type.pointer
 
-  val sexp_of_t : 'a -> Core.Sexp.t
+  val sexp_of_t : t -> Core.Sexp.t
+  val to_janet : t -> Janet.t
+  val to_janet : t -> Janet.t
 end
 
 and Tuple : sig
@@ -323,6 +326,7 @@ and Tuple : sig
   val to_array : t -> Janet.t array
   val wrap : t -> Janet.t
   val unwrap : Janet.t -> t
+  val to_janet : t -> Janet.t
 
   (** Lazy sequence over the tuple elements. *)
   val to_seq : t -> Janet.t Seq.t

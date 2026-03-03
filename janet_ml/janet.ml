@@ -74,6 +74,15 @@ module Janet = struct
     | _ -> None
   ;;
 
+  (** Return a human-readable description of a Janet value (equivalent to
+    Janet's [(describe v)]). *)
+  let to_string (v : t) : string = F.janet_description v
+
+  (** Return the string form of a Janet value (equivalent to Janet's
+    [(string v)]). For strings this gives the raw content; for other
+    types it behaves like [to_string]. *)
+  let to_string_value (v : t) : string = F.janet_to_string v
+
   (* -- Predicates / inspection -- *)
 
   type janet_type = T.janet_type
@@ -159,24 +168,15 @@ let unwrap_s64 (v : t) : int64 = F_top.janet_unwrap_s64 v
 (** Unwrap a Janet u64 value. Undefined behaviour if the value is not u64. *)
 let unwrap_u64 (v : t) : Unsigned.uint64 = F_top.janet_unwrap_u64 v
 
-(** Return a human-readable description of a Janet value (equivalent to
-    Janet's [(describe v)]). *)
-let to_string (v : t) : string = F_top.janet_description v
-
-(** Return the string form of a Janet value (equivalent to Janet's
-    [(string v)]). For strings this gives the raw content; for other
-    types it behaves like [to_string]. *)
-let to_string_value (v : t) : string = F_top.janet_to_string v
-
 (** Pretty-print a Janet value into a string.
     [depth] controls the nesting depth for structures (default 4). *)
 let pretty ?(depth = 4) (v : t) : string =
-  let buf = Buffer_.create 64 in
+  let buf = Buffer.create 64 in
   let _ = F_top.janet_pretty buf depth 0 v in
-  Buffer_.to_string buf
+  Buffer.to_string buf
 ;;
 
-(* -- Generic operations (Phase 1b) -- *)
+(* -- Generic operations  -- *)
 
 let equal (a : t) (b : t) : bool = not (phys_equal (F_top.janet_equals a b) 0)
 let length (v : t) : int = F_top.janet_length v |> Int32.to_int_exn
@@ -185,7 +185,7 @@ let put (v : t) ~(key : t) ~(value : t) : unit = F_top.janet_put v key value
 let truthy (v : t) : bool = not (phys_equal (F_top.janet_truthy v) 0)
 let gc_collect () : unit = F_top.janet_collect ()
 
-(* -- Dynamic bindings (Phase 1d) -- *)
+(* -- Dynamic bindings  -- *)
 
 let dyn (name : string) : t = F_top.janet_dyn name
 let setdyn (name : string) (value : t) : unit = F_top.janet_setdyn name value

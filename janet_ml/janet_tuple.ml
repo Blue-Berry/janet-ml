@@ -1,4 +1,5 @@
 module Make (I : Janet_sig.S) = struct
+  open! Core
   module F = Janet_c.C.Functions
   module T = Janet_c.C.Types
 
@@ -19,7 +20,7 @@ module Make (I : Janet_sig.S) = struct
   ;;
 
   (* Builder API *)
-  let begin_ length : t = head_of_data (F.janet_tuple_begin (Int32.of_int length))
+  let begin_ length : t = head_of_data (F.janet_tuple_begin (Int32.of_int_exn length))
 
   let set (builder : t) (i : int) (value : I.t) =
     let d = data_of_head builder in
@@ -31,14 +32,14 @@ module Make (I : Janet_sig.S) = struct
   let of_list (values : I.t list) : t =
     let n = List.length values in
     let c_arr = Ctypes.CArray.of_list T.janet values in
-    head_of_data (F.janet_tuple_n (Ctypes.CArray.start c_arr) (Int32.of_int n))
+    head_of_data (F.janet_tuple_n (Ctypes.CArray.start c_arr) (Int32.of_int_exn n))
   ;;
 
   let of_array (values : I.t array) : t = of_list (Array.to_list values)
 
   (* Field accessors via the head struct *)
   let length (tup : t) : int =
-    Ctypes.getf Ctypes.(!@tup) T.Janet_Tuple.length |> Int32.to_int
+    Ctypes.getf Ctypes.(!@tup) T.Janet_Tuple.length |> Int32.to_int_exn
   ;;
 
   let hash (tup : t) : int32 = Ctypes.getf Ctypes.(!@tup) T.Janet_Tuple.hash
@@ -60,6 +61,12 @@ module Make (I : Janet_sig.S) = struct
 
   (* Wrap/unwrap convert between head pointer and Janet value *)
   let wrap (tup : t) : I.t = F.janet_wrap_tuple (data_of_head tup)
+  let to_janet = wrap
+
+  let sexp_of_t t =
+    Sexp.List [ Sexp.Atom "Tuple"; to_janet t |> I.to_string |> Sexp.of_string ]
+  ;;
+
   let unwrap (j : I.t) : t = head_of_data (F.janet_unwrap_tuple j)
 
   let to_seq (tup : t) : I.t Seq.t =

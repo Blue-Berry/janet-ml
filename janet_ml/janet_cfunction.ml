@@ -1,5 +1,13 @@
-module Make (_ : Janet_sig.S) = struct
+open! Core
+
+module Make (I : Janet_sig.S) = struct
+  module F = Janet_c.C.Functions
+
   type t = Type.cfunction
 
-  let sexp_of_t _ = Core.Sexp.of_string "janet_cfunction"
+  let to_janet : t -> I.t = F.janet_wrap_cfunction
+
+  let sexp_of_t t =
+    Sexp.List [ Sexp.Atom "CFunction"; to_janet t |> I.to_string |> Sexp.of_string ]
+  ;;
 end
