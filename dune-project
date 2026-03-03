@@ -19,6 +19,7 @@
 
 (package
  (name janet-ml)
+ (allow_empty)
  (synopsis "A short synopsis")
  (description "A longer description")
  (depends ocaml ctypes ctypes-foreign ppx_jane core)

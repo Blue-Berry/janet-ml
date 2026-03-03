@@ -68,6 +68,7 @@ module Vm = Janet_vm.Make (Janet)
 module Env = Env.Make (Janet)
 module Marshal = Marshal.Make (Janet)
 module Unwrapped = Unwrapped.Make (Janet)
+module Cfun = Cfun.Make (Janet)
 
 module Kv = struct
   include Janet_kv.Make (Janet)

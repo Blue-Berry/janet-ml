@@ -153,7 +153,7 @@ let%expect_test "register_cfun - OCaml callback from Janet" =
   init ();
   let env = Env.core_env ~replacements:None in
   let _cb =
-    Janet_ml.register_cfun ~env "ocaml-square" (fun argc argv ->
+    Cfun.register_raw ~env "ocaml-square" (fun argc argv ->
       assert (Int32.equal argc 1l);
       let args = Ctypes.CArray.from_ptr argv 1 in
       let x = Ctypes.CArray.get args 0 |> Janet_c.C.Functions.janet_unwrap_number in

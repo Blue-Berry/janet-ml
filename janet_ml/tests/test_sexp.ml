@@ -164,7 +164,7 @@ let%expect_test "Cfunction.sexp_of_t" =
       Ctypes.CArray.from_ptr argv (i + 1) |> fun a -> Ctypes.CArray.get a i
     in
     let _cb =
-      register_cfun ~env "ocaml-id" (fun _argc argv ->
+      Cfun.register_raw ~env "ocaml-id" (fun _argc argv ->
         wrap_num (argv_get argv 0 |> unwrap_num))
     in
     let cfn =

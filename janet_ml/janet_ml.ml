@@ -13,7 +13,3 @@ let dobytes = Janet.dobytes
 let dobytes_exn = Janet.dobytes_exn
 let mcall = Janet.mcall
 let mcall_exn = Janet.mcall_exn
-
-module JanetCfun = Cfun.JanetCfun
-
-let register_cfun = Cfun.register_raw

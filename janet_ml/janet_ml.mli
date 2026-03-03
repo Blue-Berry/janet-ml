@@ -36,19 +36,3 @@ val mcall : string -> Janet.t list -> Janet.t
 
 (** Like [mcall] but wraps the call for a consistent exception-based interface. *)
 val mcall_exn : string -> Janet.t list -> Janet.t
-
-module JanetCfun : Foreign.Funptr with type fn = int32 -> Janet.t Ctypes.ptr -> Janet.t
-
-(** Register an OCaml closure as a Janet C-function named [name] in [env].
-    The callback receives [(argc : int32) (argv : Janet.t ptr)] and must return
-    a [Janet.t]. Use [Ctypes.CArray.from_ptr argv (Int32.to_int_exn argc)] to
-    access arguments safely.
-
-    The returned [JanetCfun.t] keeps the libffi closure alive. Retain it for
-    as long as Janet may call back into OCaml. Call [JanetCfun.free] to release
-    it when done. *)
-val register_cfun
-  :  env:Janet.Table.t
-  -> string
-  -> (int32 -> Janet.t Ctypes.ptr -> Janet.t)
-  -> JanetCfun.t
