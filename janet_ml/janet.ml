@@ -20,6 +20,9 @@ module Janet = struct
     Fun.protect ~finally:(fun () -> ignore (F.janet_gcunroot v)) (fun () -> f v)
   ;;
 
+  let gc_root (v : t) : unit = F.janet_gcroot v
+  let gc_unroot (v : t) : unit = F.janet_gcunroot v |> ignore
+
   (* -- Convenience constructors -- *)
 
   let nil : t = F.janet_wrap_nil ()

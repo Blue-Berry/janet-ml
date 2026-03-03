@@ -450,6 +450,8 @@ val to_ptr : t -> ptr
 val create : unit -> t
 val create_ptr : unit -> ptr
 val with_root : t -> f:(t -> 'a) -> 'a
+val gc_root : t -> unit
+val gc_unroot : t -> unit
 
 (* -- Convenience constructors -- *)
 
