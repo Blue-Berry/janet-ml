@@ -151,3 +151,87 @@ let gc_collect () : unit = F_top.janet_collect ()
 
 let dyn (name : string) : t = F_top.janet_dyn name
 let setdyn (name : string) (value : t) : unit = F_top.janet_setdyn name value
+
+(* -- Signal checking -- *)
+
+exception Janet_error = Janet_errors.Janet_error
+
+let check_signal (signal : Fiber.signal) value : unit =
+  match signal with
+  | Fiber.Signal_ok -> ()
+  | other ->
+    raise
+      (Janet_error
+         (Printf.sprintf
+            "Janet signal: %s (value: %s)"
+            (Fiber.signal_to_string other)
+            (Unwrapped.of_janet value |> Unwrapped.sexp_of_t |> Sexp.to_string_mach)))
+;;
+
+(* -- Eval -- *)
+
+let dostring ~(env : Table.t) (str : string) ~(source_path : string option) =
+  let out = create_ptr () in
+  let raw = F_top.janet_dostring env str source_path (Some out) in
+  let value = of_ptr out in
+  let signal = if raw = 0 then Fiber.Signal_ok else Fiber.Signal_error in
+  signal, value
+;;
+
+let dostring_exn ~env str ~source_path =
+  let signal, value = dostring ~env str ~source_path in
+  check_signal signal value;
+  value
+;;
+
+let dobytes ~(env : Table.t) (bytes : bytes) ~(source_path : string option) =
+  let len = Bytes.length bytes in
+  let c_arr = Ctypes.CArray.make Ctypes.uint8_t len in
+  for i = 0 to len - 1 do
+    Ctypes.CArray.set
+      c_arr
+      i
+      (Unsigned.UInt8.of_int (Stdlib.Char.code (Bytes.get bytes i)))
+  done;
+  let out = create_ptr () in
+  let raw =
+    F_top.janet_dobytes
+      env
+      (Ctypes.CArray.start c_arr)
+      (Int32.of_int_exn len)
+      source_path
+      (Some out)
+  in
+  let value = of_ptr out in
+  let signal = if raw = 0 then Fiber.Signal_ok else Fiber.Signal_error in
+  signal, value
+;;
+
+let dobytes_exn ~env bytes ~source_path =
+  let signal, value = dobytes ~env bytes ~source_path in
+  check_signal signal value;
+  value
+;;
+
+(* -- Method calls -- *)
+
+let mcall name (args : t list) =
+  let argn = Int32.of_int_exn (List.length args) in
+  let argv = Ctypes.CArray.of_list Janet_c.C.Types.janet args |> Ctypes.CArray.start in
+  F_top.janet_mcall name argn argv
+;;
+
+let mcall_exn name (args : t list) =
+  let value = mcall name args in
+  let signal = F_top.janet_type value in
+  ignore signal;
+  value
+;;
+
+(* -- VM convenience -- *)
+
+let with_janet_env (f : Env.t -> 'a) =
+  Vm.with_vm (fun () ->
+    let env = Env.core_env ~replacements:None in
+    f env)
+;;

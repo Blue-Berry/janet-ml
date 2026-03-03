@@ -24,3 +24,16 @@ let register ~(env : Type.table) (name : string) (f : Janet.t array -> Janet.t) 
   Janet.Env.def env name jval;
   dyn
 ;;
+
+let register_raw
+      ~(env : Type.table)
+      (name : string)
+      (f : int32 -> Janet.t Ctypes.ptr -> Janet.t)
+  : handle
+  =
+  let dyn = JanetCfun.of_fun f in
+  let sfptr = Ctypes.coerce JanetCfun.t (Ctypes.static_funptr cfun_fn_type) dyn in
+  let jval = F.janet_wrap_cfunction sfptr in
+  Janet.Env.def env name jval;
+  dyn
+;;

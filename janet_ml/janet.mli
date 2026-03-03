@@ -331,6 +331,9 @@ end
 and Vm : sig
   type t = Type.vm
 
+  val init : unit -> unit
+  val deinit : unit -> unit
+  val with_vm : (unit -> 'a) -> 'a
   val local_vm : unit -> t
   val create : unit -> t
   val free : t -> unit
@@ -489,3 +492,14 @@ val dyn : string -> t
 val setdyn : string -> t -> unit
 val sexp_of_t : Janet.t -> Sexplib0.Sexp.t
 val t_of_sexp : Sexplib0.Sexp.t -> Janet.t
+
+exception Janet_error of string
+
+val check_signal : Fiber.signal -> t -> unit
+val dostring : env:Table.t -> string -> source_path:string option -> Fiber.signal * t
+val dostring_exn : env:Table.t -> string -> source_path:string option -> t
+val dobytes : env:Table.t -> bytes -> source_path:string option -> Fiber.signal * t
+val dobytes_exn : env:Table.t -> bytes -> source_path:string option -> t
+val mcall : string -> t list -> t
+val mcall_exn : string -> t list -> t
+val with_janet_env : (Env.t -> 'a) -> 'a

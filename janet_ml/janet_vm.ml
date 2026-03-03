@@ -1,5 +1,6 @@
+module F = Janet_c.C.Functions
+
 module Make (_ : Janet_sig.S) = struct
-  module F = Janet_c.C.Functions
   module T = Janet_c.C.Types
 
   type t = Type.vm
@@ -15,6 +16,19 @@ module Make (_ : Janet_sig.S) = struct
   ;;
 
   let load (vm : t) = F.janet_vm_load vm
+
+  let init () =
+    match F.janet_init () with
+    | 0 -> ()
+    | _ -> failwith "Failed to setup Janet Environment"
+  ;;
+
+  let deinit = F.janet_deinit
+
+  let with_vm f =
+    init ();
+    Fun.protect ~finally:deinit f
+  ;;
 end
 
 (* JANET_API void janet_interpreter_interrupt(JanetVM *vm); *)
