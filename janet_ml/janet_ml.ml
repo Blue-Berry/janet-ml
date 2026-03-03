@@ -24,24 +24,15 @@ let with_janet_env (f : Janet.Env.t -> 'a) =
     f env)
 ;;
 
-type signal = T.janet_signal
-
-let signal_to_string = function
-  | T.Signal_ok -> "ok"
-  | T.Signal_error -> "error"
-  | T.Signal_debug -> "debug"
-  | T.Signal_yield -> "yield"
-;;
-
-let check_signal signal value =
+let check_signal (signal : Janet.Fiber.signal) value =
   match signal with
-  | T.Signal_ok -> ()
+  | Janet.Fiber.Signal_ok -> ()
   | other ->
     raise
       (Janet_error
          (Printf.sprintf
             "Janet signal: %s (value: %s)"
-            (signal_to_string other)
+            (Janet.Fiber.signal_to_string other)
             (Janet.Unwrapped.of_janet value
              |> Janet.Unwrapped.sexp_of_t
              |> Sexp.to_string_mach)))
@@ -52,7 +43,7 @@ let dostring ~(env : Janet.Table.t) (str : string) ~(source_path : string option
   let raw = F.janet_dostring env str source_path (Some out) in
   let value = Janet.of_ptr out in
   (* janet_dostring returns 0 for Signal_ok *)
-  let signal = if raw = 0 then T.Signal_ok else T.Signal_error in
+  let signal = if raw = 0 then Janet.Fiber.Signal_ok else Janet.Fiber.Signal_error in
   signal, value
 ;;
 
@@ -81,7 +72,7 @@ let dobytes ~(env : Janet.Table.t) (bytes : bytes) ~(source_path : string option
       (Some out)
   in
   let value = Janet.of_ptr out in
-  let signal = if raw = 0 then T.Signal_ok else T.Signal_error in
+  let signal = if raw = 0 then Janet.Fiber.Signal_ok else Janet.Fiber.Signal_error in
   signal, value
 ;;
 

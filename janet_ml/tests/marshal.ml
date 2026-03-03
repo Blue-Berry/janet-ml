@@ -80,8 +80,8 @@ let%expect_test "dostring error handling" =
   let env = Env.core_env ~replacements:None in
   let signal, _value = Janet_ml.dostring ~env "(/ 1 0)" ~source_path:(Some "test") in
   (match signal with
-   | Janet_c.C.Types.Signal_ok -> print_endline "ok"
-   | Janet_c.C.Types.Signal_error -> print_endline "error"
+   | Fiber.Signal_ok -> print_endline "ok"
+   | Fiber.Signal_error -> print_endline "error"
    | _ -> print_endline "other");
   [%expect {| error |}]
 ;;

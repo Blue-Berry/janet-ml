@@ -12,20 +12,22 @@ val with_janet : (unit -> 'a) -> 'a
 (** Like [with_janet] but also creates a core environment and passes it to [f]. *)
 val with_janet_env : (Janet.Table.t -> 'a) -> 'a
 
-type signal = Janet_c.C.Types.janet_signal
-
 (** Evaluate a Janet source string. Returns the signal and the result/error value. *)
 val dostring
   :  env:Janet.Table.t
   -> string
   -> source_path:string option
-  -> signal * Janet.t
+  -> Janet.Fiber.signal * Janet.t
 
 (** Like [dostring] but raises [Janet_error] on any non-ok signal. *)
 val dostring_exn : env:Janet.Table.t -> string -> source_path:string option -> Janet.t
 
 (** Evaluate Janet bytecode. Returns the signal and the result/error value. *)
-val dobytes : env:Janet.Table.t -> bytes -> source_path:string option -> signal * Janet.t
+val dobytes
+  :  env:Janet.Table.t
+  -> bytes
+  -> source_path:string option
+  -> Janet.Fiber.signal * Janet.t
 
 (** Like [dobytes] but raises [Janet_error] on any non-ok signal. *)
 val dobytes_exn : env:Janet.Table.t -> bytes -> source_path:string option -> Janet.t

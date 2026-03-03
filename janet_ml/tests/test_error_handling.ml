@@ -8,7 +8,7 @@ let%expect_test "dostring returns Signal_ok for a successful evaluation" =
   with_janet_env (fun env ->
     let signal, value = Janet_ml.dostring ~env "(+ 1 2)" ~source_path:None in
     (match signal with
-     | Janet_c.C.Types.Signal_ok -> print_string "ok "
+     | Fiber.Signal_ok -> print_string "ok "
      | _ -> print_string "unexpected ");
     value |> Unwrapped.of_janet |> Unwrapped.sexp_of_t |> print_s);
   [%expect {| ok (Number 3) |}]
@@ -18,8 +18,8 @@ let%expect_test "dostring returns Signal_error when Janet raises an error" =
   with_janet_env (fun env ->
     let signal, _value = Janet_ml.dostring ~env "(error \"boom\")" ~source_path:None in
     match signal with
-    | Janet_c.C.Types.Signal_error -> print_endline "error"
-    | Janet_c.C.Types.Signal_ok -> print_endline "ok"
+    | Fiber.Signal_error -> print_endline "error"
+    | Fiber.Signal_ok -> print_endline "ok"
     | _ -> print_endline "other");
   [%expect
     {|
@@ -33,7 +33,7 @@ let%expect_test "dostring returns Signal_error on a compile error" =
   with_janet_env (fun env ->
     let signal, _ = Janet_ml.dostring ~env "(defn broken [" ~source_path:(Some "test") in
     match signal with
-    | Janet_c.C.Types.Signal_error -> print_endline "error"
+    | Fiber.Signal_error -> print_endline "error"
     | _ -> print_endline "unexpected");
   [%expect
     {|
@@ -47,7 +47,7 @@ let%expect_test "dostring returns Signal_error on an explicit error call" =
     (* Janet (/ 1 0) returns inf, not an error. Use (error ...) to force a signal. *)
     let signal, _ = Janet_ml.dostring ~env {|(error "forced")|} ~source_path:None in
     match signal with
-    | Janet_c.C.Types.Signal_error -> print_endline "error"
+    | Fiber.Signal_error -> print_endline "error"
     | _ -> print_endline "unexpected");
   [%expect
     {|

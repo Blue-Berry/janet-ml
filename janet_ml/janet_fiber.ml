@@ -20,11 +20,18 @@ module Make (I : Janet_sig.S) = struct
     | User of int
   [@@deriving sexp_of]
 
-  type janet_signal = T.janet_signal =
+  type signal = T.janet_signal =
     | Signal_ok
     | Signal_error
     | Signal_debug
     | Signal_yield
+
+  let signal_to_string = function
+    | T.Signal_ok -> "ok"
+    | T.Signal_error -> "error"
+    | T.Signal_debug -> "debug"
+    | T.Signal_yield -> "yield"
+  ;;
 
   let create (callee : Janet_function.t) ~capacity ~(argv : I.t list) : t =
     let argc = List.length argv in
@@ -67,22 +74,20 @@ module Make (I : Janet_sig.S) = struct
   let wrap (fiber : t) : I.t = F.janet_wrap_fiber fiber
   let unwrap (j : I.t) : t = F.janet_unwrap_fiber j
 
-  let continue (fiber : t) (janet : I.t) : janet_signal * I.t =
+  let continue (fiber : t) (janet : I.t) : signal * I.t =
     let out = I.create_ptr () in
     let signal = F.janet_continue fiber janet out in
     signal, I.of_ptr out
   ;;
 
-  let continue_signal (fiber : t) (janet : I.t) (signal : janet_signal)
-    : janet_signal * I.t
-    =
+  let continue_signal (fiber : t) (janet : I.t) (signal : signal) : signal * I.t =
     let out = I.create_ptr () in
     let signal = F.janet_continue_signal fiber janet out signal in
     signal, I.of_ptr out
   ;;
 
   (* JANET_API JanetSignal janet_step(JanetFiber *fiber, Janet in, Janet *out); *)
-  let step (fiber : t) (janet : I.t) : janet_signal * I.t =
+  let step (fiber : t) (janet : I.t) : signal * I.t =
     let out = I.create_ptr () in
     let signal = F.janet_step fiber janet out in
     signal, I.of_ptr out

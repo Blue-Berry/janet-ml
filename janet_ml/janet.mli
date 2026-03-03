@@ -109,7 +109,7 @@ and Function : sig
     -> Janet.t list
     -> ?fiber:Janet_ml__Type.fiber option
     -> unit
-    -> Janet_c.Types_generated.janet_signal * Janet.t
+    -> Fiber.signal * Janet.t
 
   (** Call [f] with [pcall] and raise [Janet_errors.Janet_error] on any
       non-ok signal. Prefer this over [call] for production code. *)
@@ -203,12 +203,13 @@ and Fiber : sig
 
   val sexp_of_status : status -> Sexplib0.Sexp.t
 
-  type janet_signal =
+  type signal =
     | Signal_ok
     | Signal_error
     | Signal_debug
     | Signal_yield
 
+  val signal_to_string : signal -> string
   val create : Function.t -> capacity:int -> argv:Janet.t list -> t
   val reset : t -> Function.t -> argv:Janet.t list -> t
   val status : t -> status
@@ -216,9 +217,9 @@ and Fiber : sig
   val current : unit -> t
   val wrap : t -> Janet.t
   val unwrap : Janet.t -> t
-  val continue : t -> Janet.t -> janet_signal * Janet.t
-  val continue_signal : t -> Janet.t -> janet_signal -> janet_signal * Janet.t
-  val step : t -> Janet.t -> janet_signal * Janet.t
+  val continue : t -> Janet.t -> signal * Janet.t
+  val continue_signal : t -> Janet.t -> signal -> signal * Janet.t
+  val step : t -> Janet.t -> signal * Janet.t
   val set_env : t -> Table.t -> unit
   val to_janet : t -> Janet.t
 
