@@ -233,6 +233,6 @@ let mcall_exn name (args : t list) =
 
 let with_janet_env (f : Env.t -> 'a) =
   Vm.with_vm (fun () ->
-    let env = Env.core_env ~replacements:None in
+    let env = Env.core_env () in
     f env)
 ;;

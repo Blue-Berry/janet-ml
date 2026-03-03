@@ -368,7 +368,7 @@ end
 and Env : sig
   type t = Table.t
 
-  val core_env : replacements:Table.t option -> t
+  val core_env : ?replacements:Table.t -> unit -> t
 
   (** Bind [name] to [value] as an immutable def in [env]. *)
   val def : t -> ?doc:string -> string -> Janet.t -> unit

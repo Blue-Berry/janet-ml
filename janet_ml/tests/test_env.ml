@@ -132,7 +132,7 @@ let%expect_test "Extend env" =
     | Env.Binding.Def v ->
       let extras = Table.create 4 in
       Table.put extras ~key:(Janet.of_symbol "double") ~value:v;
-      let env = Env.core_env ~replacements:(Some extras) in
+      let env = Env.core_env ~replacements:extras () in
       let res = Janet_ml.dostring_exn ~env "(double 21)" ~source_path:None in
       pretty res |> print_endline
     | _ -> failwith "wrong binding kind");
@@ -143,7 +143,7 @@ let%expect_test "Extend env" =
 let%expect_test "Extend env" =
   with_janet_env (fun env ->
     let _ = Janet_ml.dostring_exn ~env "(defn double [x] (* x 2))" ~source_path:None in
-    let env = Env.core_env ~replacements:(Some env) in
+    let env = Env.core_env ~replacements:env () in
     let res = Janet_ml.dostring_exn ~env "(double 21)" ~source_path:None in
     pretty res |> print_endline);
   [%expect {| 42 |}]

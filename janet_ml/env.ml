@@ -6,7 +6,9 @@ module Make (I : Janet_sig.S) = struct
 
   type t = Janet_table.t
 
-  let core_env ~(replacements : Janet_table.t option) : t = F.janet_core_env replacements
+  let core_env ?(replacements : Janet_table.t option) () : t =
+    F.janet_core_env replacements
+  ;;
 
   (** Bind [name] to [value] as an immutable def in [env].
       An optional [doc] string is attached as metadata. *)

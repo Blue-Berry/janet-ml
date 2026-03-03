@@ -14,7 +14,7 @@ let%expect_test "Test compile janet" =
 |}
   in
   let open Janet in
-  let env = Env.core_env ~replacements:None in
+  let env = Env.core_env () in
   Janet_ml.dostring_exn ~env src ~source_path:(Some "test")
   |> Unwrapped.of_janet
   |> Unwrapped.sexp_of_t
@@ -33,7 +33,7 @@ let%expect_test "Test resolve and call janet function" =
 |}
   in
   let open Janet in
-  let env = Env.core_env ~replacements:None in
+  let env = Env.core_env () in
   let _out = Janet_ml.dostring_exn ~env src ~source_path:(Some "test") in
   let main = Env.Binding.lookup ~env "main" |> Env.Binding.to_janet in
   (match Unwrapped.of_janet main with
@@ -58,7 +58,7 @@ let%expect_test "Test resolve and call janet function" =
 |}
   in
   let open Janet in
-  let env = Env.core_env ~replacements:None in
+  let env = Env.core_env () in
   let _out = Janet_ml.dostring_exn ~env src ~source_path:(Some "test") in
   let image = Marshal.marshal_symbol ~env "main" in
   let main = Marshal.unmarshal image in
@@ -77,7 +77,7 @@ let%expect_test "Test resolve and call janet function" =
 
 let%expect_test "dostring error handling" =
   init ();
-  let env = Env.core_env ~replacements:None in
+  let env = Env.core_env () in
   let signal, _value = Janet_ml.dostring ~env "(/ 1 0)" ~source_path:(Some "test") in
   (match signal with
    | Fiber.Signal_ok -> print_endline "ok"
@@ -88,7 +88,7 @@ let%expect_test "dostring error handling" =
 
 let%expect_test "dostring_exn raises Janet_error on failure" =
   init ();
-  let env = Env.core_env ~replacements:None in
+  let env = Env.core_env () in
   (try
      let _ = Janet_ml.dostring_exn ~env "(error \"boom\")" ~source_path:(Some "test") in
      print_endline "no exception"
@@ -102,7 +102,7 @@ let%expect_test "dostring_exn raises Janet_error on failure" =
 
 let%expect_test "Janet.to_string and Janet.pretty" =
   init ();
-  let env = Env.core_env ~replacements:None in
+  let env = Env.core_env () in
   let v = Janet_ml.dostring_exn ~env {|{:a 1 :b 2}|} ~source_path:(Some "test") in
   (* to_string gives a readable description *)
   let s = to_string v in
@@ -130,7 +130,7 @@ let%expect_test "Table.of_pairs and Table.iter" =
 
 let%expect_test "Env.def and Binding.lookup" =
   init ();
-  let env = Env.core_env ~replacements:None in
+  let env = Env.core_env () in
   let val_ = Unwrapped.to_janet (Unwrapped.Number 42.0) in
   Env.def env "my-const" val_;
   let looked_up = Env.Binding.lookup ~env "my-const" |> Env.Binding.to_janet in
@@ -140,7 +140,7 @@ let%expect_test "Env.def and Binding.lookup" =
 
 let%expect_test "with_root keeps value alive" =
   init ();
-  let env = Env.core_env ~replacements:None in
+  let env = Env.core_env () in
   let v = Janet_ml.dostring_exn ~env {|(+ 5 5)|} ~source_path:(Some "test") in
   (* root v across another allocation *)
   Janet.with_root v ~f:(fun rooted ->
@@ -151,7 +151,7 @@ let%expect_test "with_root keeps value alive" =
 
 let%expect_test "register_cfun - OCaml callback from Janet" =
   init ();
-  let env = Env.core_env ~replacements:None in
+  let env = Env.core_env () in
   let _cb =
     Cfun.register_raw ~env "ocaml-square" (fun argc argv ->
       assert (Int32.equal argc 1l);
@@ -168,7 +168,7 @@ let%expect_test "register_cfun - OCaml callback from Janet" =
 
 let%expect_test "Fiber.cancel" =
   init ();
-  let env = Env.core_env ~replacements:None in
+  let env = Env.core_env () in
   let _out =
     Janet_ml.dostring_exn
       ~env

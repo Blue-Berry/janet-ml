@@ -150,7 +150,7 @@ let%expect_test "Function.call_exn raises Janet_error when the function errors" 
 
 let%expect_test "with_janet initialises and deinitialises the VM" =
   Janet_ml.with_janet (fun () ->
-    let env = Env.core_env ~replacements:None in
+    let env = Env.core_env () in
     Janet_ml.dostring_exn ~env "(+ 3 4)" ~source_path:None
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
