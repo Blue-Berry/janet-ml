@@ -307,7 +307,6 @@ let%expect_test "Image from env with cfun" =
   (* The rreg/reg must include the cfun so it survives marshal round-trip *)
   let rreg = Marshal.make_image_dict env in
   let image = Marshal.marshal ~rreg (Table.to_janet env) in
-  let env = Env.core_env () in
   let reg = Marshal.load_image_dict env in
   let env =
     Marshal.unmarshal image ~reg
