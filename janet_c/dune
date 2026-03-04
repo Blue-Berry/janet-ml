@@ -14,7 +14,8 @@
   (build_flags_resolver
    (vendored
     (c_flags
-     (:standard -I. -std=c99 -DJANET_NO_NANBOX))
+     (:standard -I. -std=c99 -DJANET_NO_NANBOX
+      -Wno-pointer-sign -Wno-discarded-qualifiers))
     (c_library_flags
      (-lm -ldl))))
   (headers
