@@ -33,22 +33,33 @@ module Make (I : Janet_sig.S) = struct
     marshal ~unsafe ~no_cycles ~rreg:env target
   ;;
 
+  (** Return the [make-image-dict] table from [env] (value→symbol mapping),
+      suitable for use as the [~rreg] parameter to {!marshal}. *)
+  let make_image_dict (env : Env.t) : Env.t =
+    Env.Binding.lookup ~env "make-image-dict"
+    |> Env.Binding.to_janet
+    |> F.janet_unwrap_table
+  ;;
+
+  (** Return the [load-image-dict] table from [env] (symbol→value mapping),
+      suitable for use as the [~reg] parameter to {!unmarshal}. *)
+  let load_image_dict (env : Env.t) : Env.t =
+    Env.Binding.lookup ~env "load-image-dict"
+    |> Env.Binding.to_janet
+    |> F.janet_unwrap_table
+  ;;
+
   (** Unmarshal a binary image string back to a Janet value.
-      [reg] is the registry (symbol→value mapping) used to resolve references
-      during deserialization. When omitted, [janet_env_lookup(janet_core_env())]
-      is used, which handles all core symbols. *)
+      [reg] is the registry (symbol→value mapping, from [load-image-dict])
+      used to resolve references during deserialization. When omitted,
+      [load_image_dict] from the core env is used. *)
   let unmarshal ?(unsafe = false) ?(no_cycles = false) ?reg image : I.t =
     let flags = (if unsafe then 0x20000 else 0) + if no_cycles then 0x4000 else 0 in
-    let lookup =
+    let reg =
       match reg with
       | Some r -> r
-      | None -> F.janet_env_lookup (F.janet_core_env None)
+      | None -> load_image_dict (F.janet_core_env None)
     in
-    F.janet_unmarshal
-      image
-      (String.length image |> Unsigned.Size_t.of_int)
-      flags
-      lookup
-      None
+    F.janet_unmarshal image (String.length image |> Unsigned.Size_t.of_int) flags reg None
   ;;
 end

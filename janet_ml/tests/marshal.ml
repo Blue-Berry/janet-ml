@@ -263,15 +263,11 @@ let%expect_test "Image from env" =
 (defn hello [] (pp "Hello World"))
 |}
   in
-  (* Get the reverse lookup table (value→symbol) for marshaling *)
-  let rreg =
-    Env.Binding.lookup ~env "make-image-dict" |> Env.Binding.to_janet |> Table.unwrap
-  in
-  (* Marshal the env itself, using the reverse lookup *)
+  let rreg = Marshal.make_image_dict env in
   let image = Marshal.marshal ~rreg (Table.to_janet env) in
-  (* Unmarshal gives back the env table *)
+  let reg = Marshal.load_image_dict env in
   let env =
-    Marshal.unmarshal image
+    Marshal.unmarshal image ~reg
     |> Unwrapped.of_janet
     |> function
     | Unwrapped.Table t -> t

@@ -407,9 +407,17 @@ and Marshal : sig
     -> string
     -> string
 
+  (** Return the [make-image-dict] table from [env] (value→symbol mapping),
+      suitable for use as the [~rreg] parameter to {!marshal}. *)
+  val make_image_dict : Env.t -> Env.t
+
+  (** Return the [load-image-dict] table from [env] (symbol→value mapping),
+      suitable for use as the [~reg] parameter to {!unmarshal}. *)
+  val load_image_dict : Env.t -> Env.t
+
   (** Unmarshal a binary image string back to a Janet value.
-      [reg] is the registry (symbol→value). Defaults to
-      [janet_env_lookup(janet_core_env())]. *)
+      [reg] is the registry (symbol→value, from [load-image-dict]).
+      Defaults to [load_image_dict] from the core env. *)
   val unmarshal : ?unsafe:bool -> ?no_cycles:bool -> ?reg:Env.t -> string -> Janet.t
 end
 
