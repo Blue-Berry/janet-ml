@@ -285,3 +285,46 @@ let%expect_test "Image from env" =
     4
     |}]
 ;;
+
+let%expect_test "Image from env with cfun" =
+  init ();
+  let env = Env.core_env () in
+  (* Register an OCaml callback into the env *)
+  let _cb =
+    Cfun.register_raw ~env "ocaml-square" (fun _argc argv ->
+      let x = Ctypes.CArray.from_ptr argv 1 in
+      let n = Ctypes.CArray.get x 0 |> Janet_c.C.Functions.janet_unwrap_number in
+      Janet_c.C.Functions.janet_wrap_number (n *. n))
+  in
+  (* Also define a Janet function that calls the cfun *)
+  let _ =
+    dostring
+      ~env
+      {|
+(defn square-and-double [x] (* (ocaml-square x) 2))
+|}
+  in
+  (* The rreg/reg must include the cfun so it survives marshal round-trip *)
+  let rreg = Marshal.make_image_dict env in
+  let image = Marshal.marshal ~rreg (Table.to_janet env) in
+  let env = Env.core_env () in
+  let reg = Marshal.load_image_dict env in
+  let env =
+    Marshal.unmarshal image ~reg
+    |> Unwrapped.of_janet
+    |> function
+    | Unwrapped.Table t -> t
+    | _ -> failwith "Not a table"
+  in
+  let _ =
+    dostring
+      ~env
+      {|(print (ocaml-square 7))
+(print (square-and-double 3))|}
+  in
+  [%expect
+    {|
+    49
+    18
+    |}]
+;;
