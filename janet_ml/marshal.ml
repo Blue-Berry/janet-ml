@@ -5,18 +5,20 @@ module Make (I : Janet_sig.S) = struct
   module Env = Env.Make (I)
   module Janet_buffer = Janet_buffer.Make (I)
 
+  (** Marshal a Janet value to a binary image string.
+      [rreg] is the reverse registry (value→symbol mapping) used to serialize
+      references to known values. Obtain it from the [make-image-dict] binding
+      in a Janet environment. When omitted, no reverse registry is used. *)
   let marshal
         ?(unsafe = false)
         ?(no_cycles = false)
         ?(max_size = 512)
-        ~(env : Env.t option)
+        ?rreg
         (target : I.t)
     =
-    (* UNSAFE 0x20000 *)
-    (* NO_CYCLES 0x40000 *)
     let flags = (if unsafe then 0x20000 else 0) + if no_cycles then 0x4000 else 0 in
     let image = Janet_buffer.create max_size in
-    F.janet_marshal image target env flags;
+    F.janet_marshal image target rreg flags;
     Janet_buffer.to_string image
   ;;
 
@@ -28,28 +30,20 @@ module Make (I : Janet_sig.S) = struct
         (target : string)
     =
     let target = Env.Binding.lookup ~env target |> Env.Binding.to_janet in
-    marshal ~unsafe ~no_cycles ~env:(Some env) target
+    marshal ~unsafe ~no_cycles ~rreg:env target
   ;;
 
-  (* let main = *)
-  (*   F.janet_unmarshal *)
-  (*     (Janet_buffer.to_string image) *)
-  (*     (Janet_buffer.count image |> Unsigned.Size_t.of_int) *)
-  (*     0 *)
-  (*     (F.janet_env_lookup (F.janet_core_env None)) *)
-  (*     None *)
-
-  (* TODO: add merging lookup with janet_env_lookup_into *)
-  let unmarshal ?(unsafe = false) ?(no_cycles = false) ?(env : Env.t option = None) image
-    : I.t
-    =
+  (** Unmarshal a binary image string back to a Janet value.
+      [reg] is the registry (symbol→value mapping) used to resolve references
+      during deserialization. When omitted, [janet_env_lookup(janet_core_env())]
+      is used, which handles all core symbols. *)
+  let unmarshal ?(unsafe = false) ?(no_cycles = false) ?reg image : I.t =
     let flags = (if unsafe then 0x20000 else 0) + if no_cycles then 0x4000 else 0 in
-    let env =
-      match env with
-      | Some env -> env
-      | None -> F.janet_core_env None
+    let lookup =
+      match reg with
+      | Some r -> r
+      | None -> F.janet_env_lookup (F.janet_core_env None)
     in
-    let lookup = F.janet_env_lookup env in
     F.janet_unmarshal
       image
       (String.length image |> Unsigned.Size_t.of_int)

@@ -236,9 +236,56 @@ let%expect_test "Unmarshal jimage 2" =
     | Unwrapped.Table t -> t
     | _ -> failwith "Not a table"
   in
-  (* Table.to_janet env |> pretty |> print_endline; *)
-  (* let env = Env.core_env ~replacements:env () in *)
-  (* Table.to_janet env |> pretty |> print_endline; *)
-  dostring ~env "(hello)" |> ignore;
-  [%expect {| "Hello World" |}]
+  dostring
+    ~env
+    {|(hello)
+    (print (double 2))
+(print `hello, world!`)
+|}
+  |> ignore;
+  deinit ();
+  [%expect
+    {|
+    "Hello World"
+    4
+    hello, world!
+    |}]
+;;
+
+let%expect_test "Image from env" =
+  init ();
+  let env = Env.core_env () in
+  let _ =
+    dostring
+      ~env
+      {|
+(defn double [x] (* x 2))
+(defn hello [] (pp "Hello World"))
+|}
+  in
+  (* Get the reverse lookup table (value→symbol) for marshaling *)
+  let rreg =
+    Env.Binding.lookup ~env "make-image-dict" |> Env.Binding.to_janet |> Table.unwrap
+  in
+  (* Marshal the env itself, using the reverse lookup *)
+  let image = Marshal.marshal ~rreg (Table.to_janet env) in
+  (* Unmarshal gives back the env table *)
+  let env =
+    Marshal.unmarshal image
+    |> Unwrapped.of_janet
+    |> function
+    | Unwrapped.Table t -> t
+    | _ -> failwith "Not a table"
+  in
+  let _ =
+    dostring
+      ~env
+      {|(hello)
+(print (double 2))|}
+  in
+  [%expect
+    {|
+    "Hello World"
+    4
+    |}]
 ;;

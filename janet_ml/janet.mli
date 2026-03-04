@@ -389,11 +389,13 @@ and Env : sig
 end
 
 and Marshal : sig
+  (** Marshal a Janet value to a binary image string.
+      [rreg] is the reverse registry (value→symbol, from [make-image-dict]). *)
   val marshal
     :  ?unsafe:bool
     -> ?no_cycles:bool
     -> ?max_size:int
-    -> env:Env.t option
+    -> ?rreg:Env.t
     -> Janet.t
     -> string
 
@@ -405,12 +407,10 @@ and Marshal : sig
     -> string
     -> string
 
-  val unmarshal
-    :  ?unsafe:bool
-    -> ?no_cycles:bool
-    -> ?env:Env.t option
-    -> string
-    -> Janet.t
+  (** Unmarshal a binary image string back to a Janet value.
+      [reg] is the registry (symbol→value). Defaults to
+      [janet_env_lookup(janet_core_env())]. *)
+  val unmarshal : ?unsafe:bool -> ?no_cycles:bool -> ?reg:Env.t -> string -> Janet.t
 end
 
 and Unwrapped : sig
