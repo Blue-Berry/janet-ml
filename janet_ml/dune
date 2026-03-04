@@ -1,5 +1,6 @@
 (library
  (name janet_ml)
+ (public_name janet-ml)
  (libraries janet_c ctypes ctypes-foreign core)
  (preprocess
   (pps ppx_jane)))

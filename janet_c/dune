@@ -1,5 +1,6 @@
 (library
  (name janet_c)
+ (public_name janet-ml.c)
  (libraries ctypes ctypes.stubs)
  (foreign_stubs
   (language c)
