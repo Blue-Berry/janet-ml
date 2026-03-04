@@ -53,26 +53,26 @@ let%expect_test "to_string of an array produces a pointer description" =
   with_janet_env (fun env ->
     (* janet_description/janet_to_string render arrays as <array 0x...>.
        Use janet_pretty for human-readable output. *)
-    let v = Janet_ml.dostring_exn ~env "@[1 2 3]" ~source_path:None in
+    let v = Janet_ml.dostring_exn ~env "@[1 2 3]" in
     Printf.printf "starts-with-at=%b\n" (String.is_prefix (to_string v) ~prefix:"<array"));
   [%expect {| starts-with-at=true |}]
 ;;
 
 let%expect_test "pretty of an array gives readable output" =
   with_janet_env (fun env ->
-    Janet_ml.dostring_exn ~env "@[1 2 3]" ~source_path:None |> pretty |> print_endline);
+    Janet_ml.dostring_exn ~env "@[1 2 3]" |> pretty |> print_endline);
   [%expect {| @[1 2 3] |}]
 ;;
 
 let%expect_test "pretty of a tuple gives readable output" =
   with_janet_env (fun env ->
-    Janet_ml.dostring_exn ~env {|["a" 1]|} ~source_path:None |> pretty |> print_endline);
+    Janet_ml.dostring_exn ~env {|["a" 1]|} |> pretty |> print_endline);
   [%expect {| ("a" 1) |}]
 ;;
 
 let%expect_test "pretty of a struct starts with {" =
   with_janet_env (fun env ->
-    let v = Janet_ml.dostring_exn ~env "{:x 1 :y 2}" ~source_path:None in
+    let v = Janet_ml.dostring_exn ~env "{:x 1 :y 2}" in
     Printf.printf "starts-with-brace=%b\n" (String.is_prefix (pretty v) ~prefix:"{"));
   [%expect {| starts-with-brace=true |}]
 ;;
@@ -99,14 +99,14 @@ let%expect_test "to_string_value of a keyword" =
 
 let%expect_test "pretty output is non-empty" =
   with_janet_env (fun env ->
-    let v = Janet_ml.dostring_exn ~env "{:a 1}" ~source_path:None in
+    let v = Janet_ml.dostring_exn ~env "{:a 1}" in
     Printf.printf "non-empty=%b\n" (not (String.is_empty (pretty v))));
   [%expect {| non-empty=true |}]
 ;;
 
 let%expect_test "pretty of a nested structure contains the leaf values" =
   with_janet_env (fun env ->
-    let v = Janet_ml.dostring_exn ~env "{:data [1 2 3]}" ~source_path:None in
+    let v = Janet_ml.dostring_exn ~env "{:data [1 2 3]}" in
     let s = pretty ~depth:4 v in
     Printf.printf
       "has-1=%b has-2=%b has-3=%b\n"
@@ -118,7 +118,7 @@ let%expect_test "pretty of a nested structure contains the leaf values" =
 
 let%expect_test "pretty depth:0 produces shorter or equal output than depth:4" =
   with_janet_env (fun env ->
-    let v = Janet_ml.dostring_exn ~env "{:nested {:deep :value}}" ~source_path:None in
+    let v = Janet_ml.dostring_exn ~env "{:nested {:deep :value}}" in
     let shallow = pretty ~depth:0 v in
     let deep = pretty ~depth:4 v in
     Printf.printf "shallow-lte=%b\n" (String.length shallow <= String.length deep));

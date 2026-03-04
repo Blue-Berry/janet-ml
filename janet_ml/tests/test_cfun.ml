@@ -17,7 +17,7 @@ let%expect_test "unary callback is callable from Janet" =
       Cfun.register_raw ~env "ocaml-square" (fun _argc argv ->
         wrap_num (argv_get argv 0 |> unwrap_num |> fun x -> x *. x))
     in
-    Janet_ml.dostring_exn ~env "(ocaml-square 9)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(ocaml-square 9)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -31,7 +31,7 @@ let%expect_test "binary callback receives both arguments" =
         assert (Int32.equal argc 2l);
         wrap_num (unwrap_num (argv_get argv 0) +. unwrap_num (argv_get argv 1)))
     in
-    Janet_ml.dostring_exn ~env "(ocaml-add 17 25)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(ocaml-add 17 25)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -47,7 +47,7 @@ let%expect_test "callback can return a string" =
         | Some ptr -> Janet_c.C.Functions.janet_wrap_string ptr
         | None -> Janet_c.C.Functions.janet_wrap_nil ())
     in
-    Janet_ml.dostring_exn ~env {|(ocaml-greet "world")|} ~source_path:None
+    Janet_ml.dostring_exn ~env {|(ocaml-greet "world")|}
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -60,7 +60,7 @@ let%expect_test "callback can return nil" =
       Cfun.register_raw ~env "ocaml-nil" (fun _argc _argv ->
         Janet_c.C.Functions.janet_wrap_nil ())
     in
-    Janet_ml.dostring_exn ~env "(ocaml-nil)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(ocaml-nil)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -81,7 +81,7 @@ let%expect_test "multiple distinct callbacks coexist in one environment" =
       Cfun.register_raw ~env "negate" (fun _argc argv ->
         wrap_num (argv_get argv 0 |> unwrap_num |> ( ~-. )))
     in
-    Janet_ml.dostring_exn ~env "(+ (double 5) (triple 3) (negate 2))" ~source_path:None
+    Janet_ml.dostring_exn ~env "(+ (double 5) (triple 3) (negate 2))"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -96,9 +96,9 @@ let%expect_test "a registered callback can be called multiple times" =
         incr call_count;
         wrap_num (argv_get argv 0 |> unwrap_num |> ( +. ) 1.0))
     in
-    let _ = Janet_ml.dostring_exn ~env "(ocaml-count 0)" ~source_path:None in
-    let _ = Janet_ml.dostring_exn ~env "(ocaml-count 1)" ~source_path:None in
-    let _ = Janet_ml.dostring_exn ~env "(ocaml-count 2)" ~source_path:None in
+    let _ = Janet_ml.dostring_exn ~env "(ocaml-count 0)" in
+    let _ = Janet_ml.dostring_exn ~env "(ocaml-count 1)" in
+    let _ = Janet_ml.dostring_exn ~env "(ocaml-count 2)" in
     Printf.printf "called %d times\n" !call_count);
   [%expect {| called 3 times |}]
 ;;
@@ -109,7 +109,7 @@ let%expect_test "registered callback works with Janet's map" =
       Cfun.register_raw ~env "inc" (fun _argc argv ->
         wrap_num (argv_get argv 0 |> unwrap_num |> ( +. ) 1.0))
     in
-    Janet_ml.dostring_exn ~env "(map inc [1 2 3 4 5])" ~source_path:None
+    Janet_ml.dostring_exn ~env "(map inc [1 2 3 4 5])"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -123,7 +123,7 @@ let%expect_test "registered callback works with Janet's reduce" =
         assert (Int32.equal argc 2l);
         wrap_num (unwrap_num (argv_get argv 0) *. unwrap_num (argv_get argv 1)))
     in
-    Janet_ml.dostring_exn ~env "(reduce ocaml-mul 1 [1 2 3 4 5])" ~source_path:None
+    Janet_ml.dostring_exn ~env "(reduce ocaml-mul 1 [1 2 3 4 5])"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -138,9 +138,9 @@ let%expect_test "callback accumulates OCaml state across Janet calls" =
         total := !total +. (argv_get argv 0 |> unwrap_num);
         wrap_num !total)
     in
-    let _ = Janet_ml.dostring_exn ~env "(ocaml-accumulate 10)" ~source_path:None in
-    let _ = Janet_ml.dostring_exn ~env "(ocaml-accumulate 20)" ~source_path:None in
-    Janet_ml.dostring_exn ~env "(ocaml-accumulate 12)" ~source_path:None
+    let _ = Janet_ml.dostring_exn ~env "(ocaml-accumulate 10)" in
+    let _ = Janet_ml.dostring_exn ~env "(ocaml-accumulate 20)" in
+    Janet_ml.dostring_exn ~env "(ocaml-accumulate 12)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);

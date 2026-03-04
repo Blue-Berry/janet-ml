@@ -17,7 +17,7 @@ let%expect_test "Table.of_pairs creates a table accessible from Janet" =
   with_janet_env (fun env ->
     let tbl = Table.of_pairs [ kw "name", str "Alice"; kw "age", num 30.0 ] in
     Env.def env "person" (Table.wrap tbl);
-    Janet_ml.dostring_exn ~env "(get person :name)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(get person :name)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -97,10 +97,7 @@ let%expect_test "Table.to_pairs round-trips" =
 let%expect_test "Table built by Janet code is iterable from OCaml" =
   with_janet_env (fun env ->
     (* Use @{} syntax for a mutable table, {} creates an immutable struct *)
-    let tbl =
-      Janet_ml.dostring_exn ~env "@{:one 1 :two 2 :three 3}" ~source_path:None
-      |> Table.unwrap
-    in
+    let tbl = Janet_ml.dostring_exn ~env "@{:one 1 :two 2 :three 3}" |> Table.unwrap in
     let sum =
       Table.fold tbl ~init:0.0 ~f:(fun acc _k v ->
         match Unwrapped.of_janet v with
@@ -113,9 +110,7 @@ let%expect_test "Table built by Janet code is iterable from OCaml" =
 
 let%expect_test "Struct.iter visits every key-value pair" =
   with_janet_env (fun env ->
-    let st =
-      Janet_ml.dostring_exn ~env "{:r 255 :g 128 :b 0}" ~source_path:None |> Struct.unwrap
-    in
+    let st = Janet_ml.dostring_exn ~env "{:r 255 :g 128 :b 0}" |> Struct.unwrap in
     let collected = ref [] in
     Struct.iter st ~f:(fun k v -> collected := (to_string k, to_string v) :: !collected);
     List.sort !collected ~compare:[%compare: string * string]
@@ -130,9 +125,7 @@ let%expect_test "Struct.iter visits every key-value pair" =
 
 let%expect_test "Struct.fold sums values" =
   with_janet_env (fun env ->
-    let st =
-      Janet_ml.dostring_exn ~env "{:x 3 :y 4}" ~source_path:None |> Struct.unwrap
-    in
+    let st = Janet_ml.dostring_exn ~env "{:x 3 :y 4}" |> Struct.unwrap in
     let sum =
       Struct.fold st ~init:0.0 ~f:(fun acc _k v ->
         match Unwrapped.of_janet v with

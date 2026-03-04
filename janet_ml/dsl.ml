@@ -37,7 +37,7 @@ module Make (S : S) = struct
        let base_env = Janet.Env.core_env () in
        let rooted_base_env = Janet.Table.wrap base_env in
        Janet.gc_root rooted_base_env;
-       let _ = Janet.dostring_exn ~env:base_env S.janet_lib ~source_path:None in
+       let _ = Janet.dostring_exn ~env:base_env S.janet_lib in
        let handles =
          List.map
            (fun (fn : S.fun_t) -> Janet.Cfun.register ~env:base_env fn.name fn.f)
@@ -52,8 +52,7 @@ module Make (S : S) = struct
   let with_env (f : Janet.Env.t -> 'a) =
     let st = Lazy.force state in
     let env =
-      Janet.dostring_exn ~env:st.base_env "(make-env root-env)" ~source_path:None
-      |> Janet.Table.unwrap
+      Janet.dostring_exn ~env:st.base_env "(make-env root-env)" |> Janet.Table.unwrap
     in
     Janet.with_root (Janet.Table.wrap env) ~f:(fun _ -> f env)
   ;;

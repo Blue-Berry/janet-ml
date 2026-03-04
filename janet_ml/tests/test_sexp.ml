@@ -96,7 +96,7 @@ let%expect_test "Kv.sexp_of_t" =
 
 let%expect_test "Fiber.sexp_of_t" =
   with_janet_env (fun env ->
-    let _ = Janet_ml.dostring_exn ~env "(defn noop [] nil)" ~source_path:None in
+    let _ = Janet_ml.dostring_exn ~env "(defn noop [] nil)" in
     let fn =
       match
         Env.Binding.lookup ~env "noop" |> Env.Binding.to_janet |> Unwrapped.of_janet
@@ -126,7 +126,7 @@ let%expect_test "Unwrapped.sexp_of_t on UInt variant" =
 
 let%expect_test "Function.sexp_of_t" =
   with_janet_env (fun env ->
-    let _ = Janet_ml.dostring_exn ~env "(defn double [x] (* x 2))" ~source_path:None in
+    let _ = Janet_ml.dostring_exn ~env "(defn double [x] (* x 2))" in
     let fn =
       match
         Env.Binding.lookup ~env "double" |> Env.Binding.to_janet |> Unwrapped.of_janet
@@ -142,7 +142,7 @@ let%expect_test "Function.sexp_of_t" =
 
 let%expect_test "Unwrapped.sexp_of_t on Function variant" =
   with_janet_env (fun env ->
-    let _ = Janet_ml.dostring_exn ~env "(defn double [x] (* x 2))" ~source_path:None in
+    let _ = Janet_ml.dostring_exn ~env "(defn double [x] (* x 2))" in
     let fn =
       match
         Env.Binding.lookup ~env "double" |> Env.Binding.to_janet |> Unwrapped.of_janet
@@ -186,9 +186,7 @@ let%expect_test "Cfunction.sexp_of_t" =
 
 let%expect_test "Janet.sexp_of_t on a function value" =
   with_janet_env (fun env ->
-    let fn_val =
-      Janet_ml.dostring_exn ~env "(defn triple [x] (* x 3))" ~source_path:None
-    in
+    let fn_val = Janet_ml.dostring_exn ~env "(defn triple [x] (* x 3))" in
     try_sexp (fun () -> sexp_of_t fn_val));
   [%expect {| (Function "<function triple>") |}]
 ;;

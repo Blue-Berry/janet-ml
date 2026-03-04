@@ -6,7 +6,7 @@ open Janet_ml.Janet
 
 let%expect_test "dostring returns Signal_ok for a successful evaluation" =
   with_janet_env (fun env ->
-    let signal, value = Janet_ml.dostring ~env "(+ 1 2)" ~source_path:None in
+    let signal, value = Janet_ml.dostring ~env "(+ 1 2)" in
     (match signal with
      | Fiber.Signal_ok -> print_string "ok "
      | _ -> print_string "unexpected ");
@@ -16,7 +16,7 @@ let%expect_test "dostring returns Signal_ok for a successful evaluation" =
 
 let%expect_test "dostring returns Signal_error when Janet raises an error" =
   with_janet_env (fun env ->
-    let signal, _value = Janet_ml.dostring ~env "(error \"boom\")" ~source_path:None in
+    let signal, _value = Janet_ml.dostring ~env "(error \"boom\")" in
     match signal with
     | Fiber.Signal_error -> print_endline "error"
     | Fiber.Signal_ok -> print_endline "ok"
@@ -31,7 +31,7 @@ let%expect_test "dostring returns Signal_error when Janet raises an error" =
 
 let%expect_test "dostring returns Signal_error on a compile error" =
   with_janet_env (fun env ->
-    let signal, _ = Janet_ml.dostring ~env "(defn broken [" ~source_path:(Some "test") in
+    let signal, _ = Janet_ml.dostring ~env "(defn broken [" ~source_path:"test" in
     match signal with
     | Fiber.Signal_error -> print_endline "error"
     | _ -> print_endline "unexpected");
@@ -45,7 +45,7 @@ let%expect_test "dostring returns Signal_error on a compile error" =
 let%expect_test "dostring returns Signal_error on an explicit error call" =
   with_janet_env (fun env ->
     (* Janet (/ 1 0) returns inf, not an error. Use (error ...) to force a signal. *)
-    let signal, _ = Janet_ml.dostring ~env {|(error "forced")|} ~source_path:None in
+    let signal, _ = Janet_ml.dostring ~env {|(error "forced")|} in
     match signal with
     | Fiber.Signal_error -> print_endline "error"
     | _ -> print_endline "unexpected");
@@ -59,7 +59,7 @@ let%expect_test "dostring returns Signal_error on an explicit error call" =
 
 let%expect_test "dostring_exn returns the value on success" =
   with_janet_env (fun env ->
-    Janet_ml.dostring_exn ~env "(* 6 7)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(* 6 7)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -69,8 +69,7 @@ let%expect_test "dostring_exn returns the value on success" =
 let%expect_test "dostring_exn raises Janet_error on failure" =
   with_janet_env (fun env ->
     try
-      ignore
-        (Janet_ml.dostring_exn ~env {|(error "something went wrong")|} ~source_path:None);
+      ignore (Janet_ml.dostring_exn ~env {|(error "something went wrong")|});
       print_endline "no exception raised"
     with
     | Janet_ml.Janet_error msg ->
@@ -87,9 +86,7 @@ let%expect_test "dostring_exn raises Janet_error on failure" =
 
 let%expect_test "dostring_exn error message includes the Janet value" =
   with_janet_env (fun env ->
-    try
-      ignore (Janet_ml.dostring_exn ~env {|(error "my-error-token")|} ~source_path:None)
-    with
+    try ignore (Janet_ml.dostring_exn ~env {|(error "my-error-token")|}) with
     | Janet_ml.Janet_error msg ->
       if String.is_substring msg ~substring:"my-error-token"
       then print_endline "error message contains Janet value"
@@ -104,7 +101,7 @@ let%expect_test "dostring_exn error message includes the Janet value" =
 
 let%expect_test "Function.call_exn returns the value on success" =
   with_janet_env (fun env ->
-    let _ = Janet_ml.dostring_exn ~env "(defn add [a b] (+ a b))" ~source_path:None in
+    let _ = Janet_ml.dostring_exn ~env "(defn add [a b] (+ a b))" in
     let fn_ =
       match
         Env.Binding.lookup ~env "add" |> Env.Binding.to_janet |> Unwrapped.of_janet
@@ -125,12 +122,7 @@ let%expect_test "Function.call_exn returns the value on success" =
 
 let%expect_test "Function.call_exn raises Janet_error when the function errors" =
   with_janet_env (fun env ->
-    let _ =
-      Janet_ml.dostring_exn
-        ~env
-        "(defn always-fail [] (error \"nope\"))"
-        ~source_path:None
-    in
+    let _ = Janet_ml.dostring_exn ~env "(defn always-fail [] (error \"nope\"))" in
     let fn_ =
       match
         Env.Binding.lookup ~env "always-fail"
@@ -151,7 +143,7 @@ let%expect_test "Function.call_exn raises Janet_error when the function errors" 
 let%expect_test "with_janet initialises and deinitialises the VM" =
   Janet_ml.with_janet (fun () ->
     let env = Env.core_env () in
-    Janet_ml.dostring_exn ~env "(+ 3 4)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(+ 3 4)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -160,7 +152,7 @@ let%expect_test "with_janet initialises and deinitialises the VM" =
 
 let%expect_test "with_janet_env passes a ready-to-use environment" =
   Janet_ml.with_janet_env (fun env ->
-    Janet_ml.dostring_exn ~env {|(string "hello" " " "world")|} ~source_path:None
+    Janet_ml.dostring_exn ~env {|(string "hello" " " "world")|}
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -171,7 +163,7 @@ let%expect_test "with_janet deinitialises even when the body raises" =
   (try Janet_ml.with_janet (fun () -> raise (Failure "inner error")) with
    | Failure msg -> Printf.printf "propagated: %s\n" msg);
   Janet_ml.with_janet_env (fun env ->
-    Janet_ml.dostring_exn ~env "(+ 1 1)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(+ 1 1)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);

@@ -19,7 +19,7 @@ let signal_name = function
 
 let%expect_test "a freshly created fiber has status New" =
   with_janet_env (fun env ->
-    let _ = Janet_ml.dostring_exn ~env "(defn noop [] nil)" ~source_path:None in
+    let _ = Janet_ml.dostring_exn ~env "(defn noop [] nil)" in
     let fiber = Fiber.create (lookup_fn env "noop") ~capacity:64 ~argv:[] in
     match Fiber.status fiber with
     | Fiber.New -> print_endline "New"
@@ -29,7 +29,7 @@ let%expect_test "a freshly created fiber has status New" =
 
 let%expect_test "running a fiber to completion produces status Dead" =
   with_janet_env (fun env ->
-    let _ = Janet_ml.dostring_exn ~env "(defn give-42 [] 42)" ~source_path:None in
+    let _ = Janet_ml.dostring_exn ~env "(defn give-42 [] 42)" in
     let fiber = Fiber.create (lookup_fn env "give-42") ~capacity:64 ~argv:[] in
     let sig_, result = Fiber.continue fiber (create ()) in
     Printf.printf
@@ -48,9 +48,7 @@ let%expect_test "running a fiber to completion produces status Dead" =
 
 let%expect_test "a yielding fiber produces Signal_yield and status Pending" =
   with_janet_env (fun env ->
-    let _ =
-      Janet_ml.dostring_exn ~env "(defn gen [] (yield 1) (yield 2))" ~source_path:None
-    in
+    let _ = Janet_ml.dostring_exn ~env "(defn gen [] (yield 1) (yield 2))" in
     let fiber = Fiber.create (lookup_fn env "gen") ~capacity:64 ~argv:[] in
     let sig1, v1 = Fiber.continue fiber (create ()) in
     Printf.printf
@@ -69,7 +67,7 @@ let%expect_test "a yielding fiber produces Signal_yield and status Pending" =
 
 let%expect_test "can_resume returns true for a Pending fiber" =
   with_janet_env (fun env ->
-    let _ = Janet_ml.dostring_exn ~env "(defn gen [] (yield 1) 2)" ~source_path:None in
+    let _ = Janet_ml.dostring_exn ~env "(defn gen [] (yield 1) 2)" in
     let fiber = Fiber.create (lookup_fn env "gen") ~capacity:64 ~argv:[] in
     let _ = Fiber.continue fiber (create ()) in
     Printf.printf "can_resume=%b\n" (Fiber.can_resume fiber));
@@ -78,7 +76,7 @@ let%expect_test "can_resume returns true for a Pending fiber" =
 
 let%expect_test "can_resume returns false for a Dead fiber" =
   with_janet_env (fun env ->
-    let _ = Janet_ml.dostring_exn ~env "(defn done [] :done)" ~source_path:None in
+    let _ = Janet_ml.dostring_exn ~env "(defn done [] :done)" in
     let fiber = Fiber.create (lookup_fn env "done") ~capacity:64 ~argv:[] in
     let _ = Fiber.continue fiber (create ()) in
     Printf.printf "can_resume=%b\n" (Fiber.can_resume fiber));
@@ -87,12 +85,7 @@ let%expect_test "can_resume returns false for a Dead fiber" =
 
 let%expect_test "Fiber.cancel puts a pending fiber into Error state" =
   with_janet_env (fun env ->
-    let _ =
-      Janet_ml.dostring_exn
-        ~env
-        "(defn looper [] (forever (yield :tick)))"
-        ~source_path:None
-    in
+    let _ = Janet_ml.dostring_exn ~env "(defn looper [] (forever (yield :tick)))" in
     let fiber = Fiber.create (lookup_fn env "looper") ~capacity:64 ~argv:[] in
     let _ = Fiber.continue fiber (create ()) in
     Fiber.cancel fiber (Unwrapped.to_janet (Unwrapped.String "timed out"));
@@ -104,9 +97,7 @@ let%expect_test "Fiber.cancel puts a pending fiber into Error state" =
 
 let%expect_test "Fiber.cancel makes can_resume return false" =
   with_janet_env (fun env ->
-    let _ =
-      Janet_ml.dostring_exn ~env "(defn gen [] (yield 1) (yield 2))" ~source_path:None
-    in
+    let _ = Janet_ml.dostring_exn ~env "(defn gen [] (yield 1) (yield 2))" in
     let fiber = Fiber.create (lookup_fn env "gen") ~capacity:64 ~argv:[] in
     let _ = Fiber.continue fiber (create ()) in
     Fiber.cancel fiber (Unwrapped.to_janet (Unwrapped.String "cancelled"));
@@ -116,7 +107,7 @@ let%expect_test "Fiber.cancel makes can_resume return false" =
 
 let%expect_test "Fiber.cancel on a New fiber prevents it from running" =
   with_janet_env (fun env ->
-    let _ = Janet_ml.dostring_exn ~env "(defn work [] 42)" ~source_path:None in
+    let _ = Janet_ml.dostring_exn ~env "(defn work [] 42)" in
     let fiber = Fiber.create (lookup_fn env "work") ~capacity:64 ~argv:[] in
     Fiber.cancel fiber (Unwrapped.to_janet (Unwrapped.String "preempted"));
     match Fiber.status fiber with
@@ -128,10 +119,7 @@ let%expect_test "Fiber.cancel on a New fiber prevents it from running" =
 let%expect_test "driving a generator fiber through all yields" =
   with_janet_env (fun env ->
     let _ =
-      Janet_ml.dostring_exn
-        ~env
-        "(defn counter [] (yield 10) (yield 20) (yield 30))"
-        ~source_path:None
+      Janet_ml.dostring_exn ~env "(defn counter [] (yield 10) (yield 20) (yield 30))"
     in
     let fiber = Fiber.create (lookup_fn env "counter") ~capacity:64 ~argv:[] in
     let results = ref [] in

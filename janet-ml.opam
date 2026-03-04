@@ -16,6 +16,7 @@ depends: [
   "ctypes-foreign"
   "ppx_jane"
   "core"
+  "ocaml-embed-file"
   "odoc" {with-doc}
 ]
 build: [

@@ -107,7 +107,7 @@ let%expect_test "round-trip nested array" =
 let%expect_test "Janet.t round-trip via sexp" =
   init ();
   let env = Env.core_env () in
-  let result = Janet_ml.dostring_exn ~env {|(+ 1 2)|} ~source_path:(Some "test") in
+  let result = Janet_ml.dostring_exn ~env {|(+ 1 2)|} ~source_path:"test" in
   let sexp = sexp_of_t result in
   print_s sexp;
   [%expect {| (Number 3) |}];

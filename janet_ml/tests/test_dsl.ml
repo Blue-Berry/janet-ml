@@ -36,20 +36,20 @@ module Demo = Dsl.Make (struct
 let%expect_test "Dsl base setup runs once and is reused across calls" =
   ocaml_counter_calls := 0;
   Demo.with_env (fun env ->
-    Janet_ml.dostring_exn ~env "(dsl-load-count)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(dsl-load-count)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s;
-    Janet_ml.dostring_exn ~env "(ocaml-counter)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(ocaml-counter)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
   Demo.with_env (fun env ->
-    Janet_ml.dostring_exn ~env "(dsl-load-count)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(dsl-load-count)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s;
-    Janet_ml.dostring_exn ~env "(ocaml-counter)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(ocaml-counter)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
@@ -64,7 +64,7 @@ let%expect_test "Dsl base setup runs once and is reused across calls" =
 
 let%expect_test "Dsl.with_env gets a fresh child env each call" =
   Demo.with_env (fun env ->
-    ignore (Janet_ml.dostring_exn ~env "(def ephemeral 42)" ~source_path:None);
+    ignore (Janet_ml.dostring_exn ~env "(def ephemeral 42)");
     match Env.Binding.lookup ~env "ephemeral" with
     | Env.Binding.Def _ -> print_endline "present in call 1"
     | _ -> print_endline "missing in call 1");
@@ -82,17 +82,17 @@ let%expect_test "Dsl.with_env gets a fresh child env each call" =
 let%expect_test "Dsl base bindings survive allocation pressure across calls" =
   Demo.with_env (fun env ->
     for _ = 1 to 2000 do
-      ignore (Janet_ml.dostring_exn ~env "@[1 2 3 4 5]" ~source_path:None)
+      ignore (Janet_ml.dostring_exn ~env "@[1 2 3 4 5]")
     done;
-    Janet_ml.dostring_exn ~env "(dsl-add-one 41)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(dsl-add-one 41)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);
   Demo.with_env (fun env ->
     for _ = 1 to 2000 do
-      ignore (Janet_ml.dostring_exn ~env "@[9 8 7 6 5]" ~source_path:None)
+      ignore (Janet_ml.dostring_exn ~env "@[9 8 7 6 5]")
     done;
-    Janet_ml.dostring_exn ~env "(dsl-add-one 41)" ~source_path:None
+    Janet_ml.dostring_exn ~env "(dsl-add-one 41)"
     |> Unwrapped.of_janet
     |> Unwrapped.sexp_of_t
     |> print_s);

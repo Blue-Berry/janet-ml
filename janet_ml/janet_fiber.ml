@@ -96,9 +96,16 @@ module Make (I : Janet_sig.S) = struct
   let set_env (t : t) (env : Janet_table.t) = Ctypes.(setf !@t T.Janet_Fiber.env env)
 
   (** Inject [msg] as an error into [fiber], transitioning it to the Error state.
-      Equivalent to Janet's [(cancel fiber msg)]. The error propagates when the
-      fiber is next resumed via [continue] or [step]. *)
-  let cancel (fiber : t) (msg : I.t) : unit = F.janet_cancel fiber msg
+      Uses [janet_continue_signal] with [JANET_SIGNAL_ERROR] to safely propagate
+      the cancellation without requiring the fiber to be a root/task fiber. *)
+  let cancel (fiber : t) (msg : I.t) : unit =
+    let _signal, _out = continue_signal fiber msg T.Signal_error in
+    ()
+  ;;
+
+  (** Raw [janet_cancel]. Only safe for root/task fibers used with the Janet
+      event loop. Will call [exit] if the fiber is not a root fiber. *)
+  let cancel_ev (fiber : t) (msg : I.t) : unit = F.janet_cancel fiber msg
 
   (** Returns true if the fiber can be resumed (status is New or Pending). *)
   let can_resume (fiber : t) : bool = F.janet_fiber_can_resume fiber <> 0

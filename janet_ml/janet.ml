@@ -174,7 +174,7 @@ let check_signal (signal : Fiber.signal) value : unit =
 
 (* -- Eval -- *)
 
-let dostring ~(env : Table.t) (str : string) ~(source_path : string option) =
+let dostring ?(source_path : string option) ~(env : Table.t) (str : string) =
   let out = create_ptr () in
   let raw = F_top.janet_dostring env str source_path (Some out) in
   let value = of_ptr out in
@@ -182,13 +182,17 @@ let dostring ~(env : Table.t) (str : string) ~(source_path : string option) =
   signal, value
 ;;
 
-let dostring_exn ~env str ~source_path =
-  let signal, value = dostring ~env str ~source_path in
+let dostring_exn ?(source_path : string option) ~env str =
+  let signal, value =
+    match source_path with
+    | Some source_path -> dostring ~source_path ~env str
+    | None -> dostring ~env str
+  in
   check_signal signal value;
   value
 ;;
 
-let dobytes ~(env : Table.t) (bytes : bytes) ~(source_path : string option) =
+let dobytes ?(source_path : string option) ~(env : Table.t) (bytes : bytes) =
   let len = Bytes.length bytes in
   let c_arr = Ctypes.CArray.make Ctypes.uint8_t len in
   for i = 0 to len - 1 do
@@ -211,8 +215,12 @@ let dobytes ~(env : Table.t) (bytes : bytes) ~(source_path : string option) =
   signal, value
 ;;
 
-let dobytes_exn ~env bytes ~source_path =
-  let signal, value = dobytes ~env bytes ~source_path in
+let dobytes_exn ?(source_path : string option) ~env bytes =
+  let signal, value =
+    match source_path with
+    | Some source_path -> dobytes ~env bytes ~source_path
+    | None -> dobytes ~env bytes
+  in
   check_signal signal value;
   value
 ;;

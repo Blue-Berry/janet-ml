@@ -236,9 +236,13 @@ and Fiber : sig
   val set_env : t -> Table.t -> unit
   val to_janet : t -> Janet.t
 
-  (** Inject [msg] as an error into [fiber]. The error surfaces when the fiber
-      is next resumed. Equivalent to Janet's [(cancel fiber msg)]. *)
+  (** Inject [msg] as an error into [fiber] by resuming it with
+      [JANET_SIGNAL_ERROR] via [janet_continue_signal]. Safe for any fiber. *)
   val cancel : t -> Janet.t -> unit
+
+  (** Raw [janet_cancel]. Only safe for root/task fibers used with the Janet
+      event loop. Will call [exit] if the fiber is not a root fiber. *)
+  val cancel_ev : t -> Janet.t -> unit
 
   (** Return true if the fiber can be resumed (status New or Pending). *)
   val can_resume : t -> bool
@@ -511,10 +515,10 @@ val t_of_sexp : Sexplib0.Sexp.t -> Janet.t
 exception Janet_error of string
 
 val check_signal : Fiber.signal -> t -> unit
-val dostring : env:Table.t -> string -> source_path:string option -> Fiber.signal * t
-val dostring_exn : env:Table.t -> string -> source_path:string option -> t
-val dobytes : env:Table.t -> bytes -> source_path:string option -> Fiber.signal * t
-val dobytes_exn : env:Table.t -> bytes -> source_path:string option -> t
+val dostring : ?source_path:string -> env:Table.t -> string -> Fiber.signal * t
+val dostring_exn : ?source_path:string -> env:Table.t -> string -> t
+val dobytes : ?source_path:string -> env:Table.t -> bytes -> Fiber.signal * t
+val dobytes_exn : ?source_path:string -> env:Table.t -> bytes -> t
 val mcall : string -> t list -> t
 val mcall_exn : string -> t list -> t
 val with_janet_env : (Env.t -> 'a) -> 'a

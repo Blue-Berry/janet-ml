@@ -15,7 +15,7 @@ let%expect_test "Test compile janet" =
   in
   let open Janet in
   let env = Env.core_env () in
-  Janet_ml.dostring_exn ~env src ~source_path:(Some "test")
+  Janet_ml.dostring_exn ~env src ~source_path:"test"
   |> Unwrapped.of_janet
   |> Unwrapped.sexp_of_t
   |> print_s;
@@ -34,7 +34,7 @@ let%expect_test "Test resolve and call janet function" =
   in
   let open Janet in
   let env = Env.core_env () in
-  let _out = Janet_ml.dostring_exn ~env src ~source_path:(Some "test") in
+  let _out = Janet_ml.dostring_exn ~env src ~source_path:"test" in
   let main = Env.Binding.lookup ~env "main" |> Env.Binding.to_janet in
   (match Unwrapped.of_janet main with
    | Unwrapped.Function main ->
@@ -59,7 +59,7 @@ let%expect_test "Test resolve and call janet function" =
   in
   let open Janet in
   let env = Env.core_env () in
-  let _out = Janet_ml.dostring_exn ~env src ~source_path:(Some "test") in
+  let _out = Janet_ml.dostring_exn ~env src ~source_path:"test" in
   let image = Marshal.marshal_symbol ~env "main" in
   let main = Marshal.unmarshal image in
   (match Unwrapped.of_janet main with
@@ -78,36 +78,45 @@ let%expect_test "Test resolve and call janet function" =
 let%expect_test "dostring error handling" =
   init ();
   let env = Env.core_env () in
-  let signal, _value = Janet_ml.dostring ~env "(/ 1 0)" ~source_path:(Some "test") in
+  let signal, _value = Janet_ml.dostring ~env "(error \"fail\")" ~source_path:"test" in
   (match signal with
    | Fiber.Signal_ok -> print_endline "ok"
    | Fiber.Signal_error -> print_endline "error"
    | _ -> print_endline "other");
-  [%expect {| error |}]
+  [%expect
+    {|
+    error: fail
+      in thunk [test] on line 1, column 1
+    error
+    |}]
 ;;
 
 let%expect_test "dostring_exn raises Janet_error on failure" =
   init ();
   let env = Env.core_env () in
   (try
-     let _ = Janet_ml.dostring_exn ~env "(error \"boom\")" ~source_path:(Some "test") in
+     let _ = Janet_ml.dostring_exn ~env "(error \"boom\")" ~source_path:"test" in
      print_endline "no exception"
    with
    | Janet_ml.Janet_error msg ->
      (* just print whether we got the exception, not the exact message *)
      ignore msg;
      print_endline "caught Janet_error");
-  [%expect {| caught Janet_error |}]
+  [%expect
+    {|
+    error: boom
+      in thunk [test] on line 1, column 1
+    caught Janet_error
+    |}]
 ;;
 
 let%expect_test "Janet.to_string and Janet.pretty" =
   init ();
   let env = Env.core_env () in
-  let v = Janet_ml.dostring_exn ~env {|{:a 1 :b 2}|} ~source_path:(Some "test") in
-  (* to_string gives a readable description *)
+  let v = Janet_ml.dostring_exn ~env {|{:a 1 :b 2}|} ~source_path:"test" in
+  (* to_string on a struct gives a pointer description like "<struct 0x...>" *)
   let s = to_string v in
-  (* the result should be a struct literal starting with { *)
-  print_endline (if String.is_prefix s ~prefix:"{" then "struct-like" else s);
+  print_endline (if String.is_prefix s ~prefix:"<struct" then "struct-like" else s);
   [%expect {| struct-like |}]
 ;;
 
@@ -141,10 +150,10 @@ let%expect_test "Env.def and Binding.lookup" =
 let%expect_test "with_root keeps value alive" =
   init ();
   let env = Env.core_env () in
-  let v = Janet_ml.dostring_exn ~env {|(+ 5 5)|} ~source_path:(Some "test") in
+  let v = Janet_ml.dostring_exn ~env {|(+ 5 5)|} ~source_path:"test" in
   (* root v across another allocation *)
   Janet.with_root v ~f:(fun rooted ->
-    let _other = Janet_ml.dostring_exn ~env {|(+ 1 1)|} ~source_path:(Some "test") in
+    let _other = Janet_ml.dostring_exn ~env {|(+ 1 1)|} ~source_path:"test" in
     rooted |> Unwrapped.of_janet |> Unwrapped.sexp_of_t |> print_s);
   [%expect {| (Number 10) |}]
 ;;
@@ -159,7 +168,7 @@ let%expect_test "register_cfun - OCaml callback from Janet" =
       let x = Ctypes.CArray.get args 0 |> Janet_c.C.Functions.janet_unwrap_number in
       Janet_c.C.Functions.janet_wrap_number (x *. x))
   in
-  Janet_ml.dostring_exn ~env {|(ocaml-square 7)|} ~source_path:(Some "test")
+  Janet_ml.dostring_exn ~env {|(ocaml-square 7)|} ~source_path:"test"
   |> Unwrapped.of_janet
   |> Unwrapped.sexp_of_t
   |> print_s;
@@ -173,7 +182,7 @@ let%expect_test "Fiber.cancel" =
     Janet_ml.dostring_exn
       ~env
       {|(defn looper [] (forever (yield 1)))|}
-      ~source_path:(Some "test")
+      ~source_path:"test"
   in
   let fn_ =
     match
@@ -192,4 +201,44 @@ let%expect_test "Fiber.cancel" =
    | Fiber.Error -> print_endline "fiber errored after cancel"
    | _ -> print_endline "unexpected status");
   [%expect {| fiber errored after cancel |}]
+;;
+
+let%expect_test "Unmarshal jimage" =
+  init ();
+  let image = Embedded_files.janet_image_dot_jimage in
+  let env =
+    Marshal.unmarshal image
+    |> Unwrapped.of_janet
+    |> function
+    | Unwrapped.Table t -> t
+    | _ -> failwith "Not a table"
+  in
+  let double =
+    Env.Binding.lookup ~env "double"
+    |> Env.Binding.to_janet
+    |> Unwrapped.of_janet
+    |> function
+    | Unwrapped.Function t -> t
+    | _ -> failwith "Not a function"
+  in
+  let arg = Unwrapped.to_janet (Unwrapped.Number 21.0) in
+  Function.call_exn double [ arg ] |> Unwrapped.of_janet |> Unwrapped.sexp_of_t |> print_s;
+  [%expect {| (Number 42) |}]
+;;
+
+let%expect_test "Unmarshal jimage 2" =
+  init ();
+  let image = Embedded_files.janet_image_dot_jimage in
+  let env =
+    Marshal.unmarshal image
+    |> Unwrapped.of_janet
+    |> function
+    | Unwrapped.Table t -> t
+    | _ -> failwith "Not a table"
+  in
+  (* Table.to_janet env |> pretty |> print_endline; *)
+  (* let env = Env.core_env ~replacements:env () in *)
+  (* Table.to_janet env |> pretty |> print_endline; *)
+  dostring ~env "(hello)" |> ignore;
+  [%expect {| "Hello World" |}]
 ;;
