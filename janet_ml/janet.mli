@@ -221,6 +221,16 @@ and Fiber : sig
     | Signal_error
     | Signal_debug
     | Signal_yield
+    | Signal_user0
+    | Signal_user1
+    | Signal_user2
+    | Signal_user3
+    | Signal_user4
+    | Signal_user5
+    | Signal_user6
+    | Signal_user7
+    | Signal_user8
+    | Signal_user9
 
   val signal_to_string : signal -> string
   val create : Function.t -> capacity:int -> argv:Janet.t list -> t

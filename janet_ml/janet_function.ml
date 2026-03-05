@@ -28,7 +28,9 @@ module Make (I : Janet_sig.S) = struct
      | T.Signal_debug ->
        raise (Janet_errors.Janet_error "Janet function call raised debug signal")
      | T.Signal_yield ->
-       raise (Janet_errors.Janet_error "Janet function call yielded unexpectedly"));
+       raise (Janet_errors.Janet_error "Janet function call yielded unexpectedly")
+     | _ ->
+       raise (Janet_errors.Janet_error "Janet function call returned unexpected signal"));
     value
   ;;
 

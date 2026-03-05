@@ -56,6 +56,16 @@ module Types (F : Ctypes.TYPE) = struct
     | Signal_error
     | Signal_debug
     | Signal_yield
+    | Signal_user0
+    | Signal_user1
+    | Signal_user2
+    | Signal_user3
+    | Signal_user4
+    | Signal_user5
+    | Signal_user6
+    | Signal_user7
+    | Signal_user8
+    | Signal_user9
 
   let janet_signal_enum =
     enum
@@ -65,6 +75,16 @@ module Types (F : Ctypes.TYPE) = struct
       ; Signal_error, constant "JANET_SIGNAL_ERROR" int64_t
       ; Signal_debug, constant "JANET_SIGNAL_DEBUG" int64_t
       ; Signal_yield, constant "JANET_SIGNAL_YIELD" int64_t
+      ; Signal_user0, constant "JANET_SIGNAL_USER0" int64_t
+      ; Signal_user1, constant "JANET_SIGNAL_USER1" int64_t
+      ; Signal_user2, constant "JANET_SIGNAL_USER2" int64_t
+      ; Signal_user3, constant "JANET_SIGNAL_USER3" int64_t
+      ; Signal_user4, constant "JANET_SIGNAL_USER4" int64_t
+      ; Signal_user5, constant "JANET_SIGNAL_USER5" int64_t
+      ; Signal_user6, constant "JANET_SIGNAL_USER6" int64_t
+      ; Signal_user7, constant "JANET_SIGNAL_USER7" int64_t
+      ; Signal_user8, constant "JANET_SIGNAL_USER8" int64_t
+      ; Signal_user9, constant "JANET_SIGNAL_USER9" int64_t
       ]
   ;;
 

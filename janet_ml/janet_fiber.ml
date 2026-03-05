@@ -25,12 +25,32 @@ module Make (I : Janet_sig.S) = struct
     | Signal_error
     | Signal_debug
     | Signal_yield
+    | Signal_user0
+    | Signal_user1
+    | Signal_user2
+    | Signal_user3
+    | Signal_user4
+    | Signal_user5
+    | Signal_user6
+    | Signal_user7
+    | Signal_user8
+    | Signal_user9
 
   let signal_to_string = function
     | T.Signal_ok -> "ok"
     | T.Signal_error -> "error"
     | T.Signal_debug -> "debug"
     | T.Signal_yield -> "yield"
+    | T.Signal_user0 -> "user0"
+    | T.Signal_user1 -> "user1"
+    | T.Signal_user2 -> "user2"
+    | T.Signal_user3 -> "user3"
+    | T.Signal_user4 -> "user4"
+    | T.Signal_user5 -> "user5"
+    | T.Signal_user6 -> "user6"
+    | T.Signal_user7 -> "user7"
+    | T.Signal_user8 -> "interrupt"
+    | T.Signal_user9 -> "event"
   ;;
 
   let create (callee : Janet_function.t) ~capacity ~(argv : I.t list) : t =

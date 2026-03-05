@@ -15,6 +15,7 @@ let signal_name = function
   | Fiber.Signal_error -> "error"
   | Fiber.Signal_debug -> "debug"
   | Fiber.Signal_yield -> "yield"
+  | s -> Fiber.signal_to_string s
 ;;
 
 let%expect_test "a freshly created fiber has status New" =
