@@ -23,8 +23,8 @@ module Make (I : Janet_sig.S) = struct
     | String of string
     | Symbol of string
     | Keyword of string
-    | Array of t list
-    | Tuple of t list
+    | Array of Janet_array.t
+    | Tuple of Janet_tuple.t
     | Table of Janet_table.t
     | Struct of Janet_struct.t
     | Buffer of bytes
@@ -43,8 +43,16 @@ module Make (I : Janet_sig.S) = struct
     | String s -> Sexp.List [ Sexp.Atom "String"; String.sexp_of_t s ]
     | Symbol s -> Sexp.List [ Sexp.Atom "Symbol"; String.sexp_of_t s ]
     | Keyword s -> Sexp.List [ Sexp.Atom "Keyword"; String.sexp_of_t s ]
-    | Array items -> Sexp.List [ Sexp.Atom "Array"; List.sexp_of_t sexp_of_t items ]
-    | Tuple items -> Sexp.List [ Sexp.Atom "Tuple"; List.sexp_of_t sexp_of_t items ]
+    | Array arr ->
+      Sexp.List
+        [ Sexp.Atom "Array"
+        ; List.sexp_of_t sexp_of_t (Janet_array.to_list arr |> List.map ~f:of_janet)
+        ]
+    | Tuple tup ->
+      Sexp.List
+        [ Sexp.Atom "Tuple"
+        ; List.sexp_of_t sexp_of_t (Janet_tuple.to_list tup |> List.map ~f:of_janet)
+        ]
     | Table t ->
       let pairs =
         Janet_table.to_pairs t
@@ -77,8 +85,10 @@ module Make (I : Janet_sig.S) = struct
     | List [ Atom "Symbol"; s ] -> Symbol (String.t_of_sexp s)
     | List [ Atom "Keyword"; s ] -> Keyword (String.t_of_sexp s)
     | List [ Atom "Buffer"; b ] -> Buffer (Bytes.t_of_sexp b)
-    | List [ Atom "Array"; List items ] -> Array (List.map ~f:t_of_sexp items)
-    | List [ Atom "Tuple"; List items ] -> Tuple (List.map ~f:t_of_sexp items)
+    | List [ Atom "Array"; List items ] ->
+      Array (Janet_array.of_list (List.map ~f:(fun s -> t_of_sexp s |> to_janet) items))
+    | List [ Atom "Tuple"; List items ] ->
+      Tuple (Janet_tuple.of_list (List.map ~f:(fun s -> t_of_sexp s |> to_janet) items))
     | List [ Atom "Int"; i ] -> Int (Int64.t_of_sexp i)
     | List [ Atom "UInt"; u ] -> UInt (Unsigned.UInt64.of_int64 (Int64.t_of_sexp u))
     | _ -> Sexplib0.Sexp_conv_error.no_matching_variant_found "Unwrapped.t" sexp
@@ -95,13 +105,8 @@ module Make (I : Janet_sig.S) = struct
        | None -> F.janet_wrap_nil ())
     | Symbol s -> F.janet_wrap_symbol (F.janet_csymbol s)
     | Keyword s -> F.janet_wrap_keyword (F.janet_csymbol s)
-    | Array items ->
-      let arr = Janet_array.create (List.length items) in
-      List.iter ~f:(fun x -> Janet_array.push arr (to_janet x)) items;
-      Janet_array.wrap arr
-    | Tuple items ->
-      let tup = Janet_tuple.of_list (List.map ~f:to_janet items) in
-      Janet_tuple.wrap tup
+    | Array arr -> Janet_array.wrap arr
+    | Tuple tup -> Janet_tuple.wrap tup
     | Table tbl -> Janet_table.wrap tbl
     | Struct st -> Janet_struct.wrap st
     | Buffer b ->
@@ -125,9 +130,7 @@ module Make (I : Janet_sig.S) = struct
     | T.String -> String (F.janet_unwrap_string janet)
     | T.Symbol -> Symbol (F.janet_unwrap_symbol janet)
     | T.Keyword -> Keyword (F.janet_unwrap_keyword janet)
-    | T.Array ->
-      let arr = Janet_array.unwrap janet in
-      Array (Janet_array.to_list arr |> List.map ~f:of_janet)
+    | T.Array -> Array (Janet_array.unwrap janet)
     | T.Buffer ->
       let buf = Janet_buffer.unwrap janet in
       Buffer (Janet_buffer.contents buf)
@@ -141,9 +144,7 @@ module Make (I : Janet_sig.S) = struct
        | T.Int_u64 -> UInt (F.janet_unwrap_u64 janet)
        | T.Int_none -> Abstract (F.janet_unwrap_abstract janet))
     | T.Pointer -> Pointer (F.janet_unwrap_pointer janet)
-    | T.Tuple ->
-      let tup = Janet_tuple.unwrap janet in
-      Tuple (Janet_tuple.to_list tup |> List.map ~f:of_janet)
+    | T.Tuple -> Tuple (Janet_tuple.unwrap janet)
   ;;
 
   type janet_type = T.janet_type

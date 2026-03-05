@@ -432,8 +432,8 @@ and Unwrapped : sig
     | String of string
     | Symbol of string
     | Keyword of string
-    | Array of t list
-    | Tuple of t list
+    | Array of Array.t
+    | Tuple of Tuple.t
     | Table of Table.t
     | Struct of Struct.t
     | Buffer of bytes

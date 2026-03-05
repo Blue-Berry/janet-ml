@@ -74,7 +74,14 @@ let%expect_test "round-trip buffer" =
 
 let%expect_test "round-trip array" =
   init ();
-  let sexp = Unwrapped.sexp_of_t (Array [ Number 1.0; String "two"; Nil ]) in
+  let arr =
+    Array.of_list
+      [ Unwrapped.to_janet (Number 1.0)
+      ; Unwrapped.to_janet (String "two")
+      ; Unwrapped.to_janet Nil
+      ]
+  in
+  let sexp = Unwrapped.sexp_of_t (Array arr) in
   print_s sexp;
   [%expect {| (Array ((Number 1) (String two) Nil)) |}];
   let v = Unwrapped.t_of_sexp sexp in
@@ -84,7 +91,10 @@ let%expect_test "round-trip array" =
 
 let%expect_test "round-trip tuple" =
   init ();
-  let sexp = Unwrapped.sexp_of_t (Tuple [ Boolean false; Number 3.14 ]) in
+  let tup =
+    Tuple.of_list [ Unwrapped.to_janet (Boolean false); Unwrapped.to_janet (Number 3.14) ]
+  in
+  let sexp = Unwrapped.sexp_of_t (Tuple tup) in
   print_s sexp;
   [%expect {| (Tuple ((Boolean false) (Number 3.14))) |}];
   let v = Unwrapped.t_of_sexp sexp in
@@ -94,9 +104,12 @@ let%expect_test "round-trip tuple" =
 
 let%expect_test "round-trip nested array" =
   init ();
-  let sexp =
-    Unwrapped.sexp_of_t (Array [ Array [ Number 1.0; Number 2.0 ]; Keyword "nested" ])
+  let inner = Array.of_list [ of_int 1; of_int 2 ] in
+  let outer =
+    Array.of_list
+      [ Unwrapped.to_janet (Array inner); Unwrapped.to_janet (Keyword "nested") ]
   in
+  let sexp = Unwrapped.sexp_of_t (Array outer) in
   print_s sexp;
   [%expect {| (Array ((Array ((Number 1) (Number 2))) (Keyword nested))) |}];
   let v = Unwrapped.t_of_sexp sexp in
