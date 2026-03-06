@@ -129,4 +129,7 @@ module Make (I : Janet_sig.S) = struct
 
   (** Returns true if the fiber can be resumed (status is New or Pending). *)
   let can_resume (fiber : t) : bool = F.janet_fiber_can_resume fiber <> 0
+
+  (** Read the last value produced by the fiber (e.g. its return value once Dead). *)
+  let last_value (fiber : t) : I.t = Ctypes.(getf !@fiber T.Janet_Fiber.last_value)
 end

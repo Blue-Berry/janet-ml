@@ -256,6 +256,9 @@ and Fiber : sig
 
   (** Return true if the fiber can be resumed (status New or Pending). *)
   val can_resume : t -> bool
+
+  (** Read the last value produced by the fiber (e.g. its return value once Dead). *)
+  val last_value : t -> Janet.t
 end
 
 and Compile_result : sig
@@ -366,6 +369,38 @@ and Vm : sig
   val free : t -> unit
   val save : unit -> t
   val load : t -> unit
+end
+
+and Ev : sig
+  (** Run the event loop until all scheduled fibers complete. *)
+  val run : unit -> unit
+
+  (** Return whether the event loop has no more work to do. *)
+  val is_done : unit -> bool
+
+  (** Execute one turn of the event loop. Returns [Some fiber] if a fiber
+      was interrupted via {!interrupt}, or [None] otherwise.
+      Use with {!is_done} for a custom event loop with periodic work. *)
+  val step : unit -> Fiber.t option
+
+  (** Request an interrupt on the given VM. Can be called from another thread
+      or a signal handler. Causes the next {!step} call to return the
+      interrupted fiber. *)
+  val interrupt : Vm.t -> unit
+
+  (** Schedule a fiber to run on the event loop with [value] as resume value. *)
+  val schedule : Fiber.t -> Janet.t -> unit
+
+  (** Schedule a fiber with a specific signal. *)
+  val schedule_signal : Fiber.t -> Janet.t -> Fiber.signal -> unit
+
+  (** Schedule a fiber soon (deferred scheduling). *)
+  val schedule_soon : Fiber.t -> Janet.t -> Fiber.signal -> unit
+
+  (** Run [fiber] as the entrypoint of the event loop. Returns 0 on success,
+      non-zero on error. This is a convenience that schedules the fiber and
+      runs the loop. *)
+  val loop_fiber : Fiber.t -> int
 end
 
 and Env : sig

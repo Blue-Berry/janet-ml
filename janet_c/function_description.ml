@@ -37,6 +37,34 @@ module Functions (F : Ctypes.FOREIGN) = struct
     foreign "janet_interpreter_interrupt_handled" (ptr janet_vm_s @-> returning void)
   ;;
 
+  (* Event loop *)
+  let janet_loop = foreign "janet_loop" (void @-> returning void)
+  let janet_loop_done = foreign "janet_loop_done" (void @-> returning int)
+  let janet_loop1 = foreign "janet_loop1" (void @-> returning (ptr_opt janet_fiber_s))
+
+  let janet_loop1_interrupt =
+    foreign "janet_loop1_interrupt" (ptr janet_vm_s @-> returning void)
+  ;;
+
+  let janet_loop_fiber = foreign "janet_loop_fiber" (ptr janet_fiber_s @-> returning int)
+
+  (* Scheduling *)
+  let janet_schedule =
+    foreign "janet_schedule" (ptr janet_fiber_s @-> janet @-> returning void)
+  ;;
+
+  let janet_schedule_signal =
+    foreign
+      "janet_schedule_signal"
+      (ptr janet_fiber_s @-> janet @-> Types.janet_signal_enum @-> returning void)
+  ;;
+
+  let janet_schedule_soon =
+    foreign
+      "janet_schedule_soon"
+      (ptr janet_fiber_s @-> janet @-> Types.janet_signal_enum @-> returning void)
+  ;;
+
   (* Execution *)
   let janet_continue =
     foreign
@@ -680,14 +708,6 @@ module Functions (F : Ctypes.FOREIGN) = struct
    * janet_ev_threaded_call
    * janet_ev_write_buffer
    * janet_ev_write_string
-   * janet_loop
-   * janet_loop1
-   * janet_loop1_interrupt
-   * janet_loop_done
-   * janet_loop_fiber
-   * janet_schedule
-   * janet_schedule_signal
-   * janet_schedule_soon
    *
    * -- Atomic --
    * janet_atomic_dec
