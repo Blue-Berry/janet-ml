@@ -6,6 +6,30 @@ module Make (I : Janet_sig.S) = struct
   module Janet_buffer = Janet_buffer.Make (I)
   module Janet_table = Janet_table.Make (I)
 
+  let is_nil (v : I.t) =
+    match F.janet_type v with
+    | T.Nil -> true
+    | _ -> false
+  ;;
+
+  let is_cfunction (v : I.t) =
+    match F.janet_type v with
+    | T.CFunction -> true
+    | _ -> false
+  ;;
+
+  let is_abstract (v : I.t) =
+    match F.janet_type v with
+    | T.Abstract -> true
+    | _ -> false
+  ;;
+
+  let copy_table (t : Janet_table.t) : Janet_table.t =
+    let out = Janet_table.create (Janet_table.count t) in
+    Janet_table.iter t ~f:(fun k v -> Janet_table.put out ~key:k ~value:v);
+    out
+  ;;
+
   (** Marshal a Janet value to a binary image string.
       [rreg] is the reverse registry (value→symbol mapping) used to serialize
       references to known values. Obtain it from the [make-image-dict] binding
@@ -34,20 +58,43 @@ module Make (I : Janet_sig.S) = struct
     marshal ~unsafe ~no_cycles ~rreg:env target
   ;;
 
-  (** Build a fresh reverse registry (value→symbol mapping) from [env],
-      suitable for use as the [~rreg] parameter to {!marshal}.
-      Unlike the stored [make-image-dict] snapshot, this captures bindings
-      added after the environment was created (e.g. registered cfunctions). *)
+  (** Build a reverse registry (value→symbol mapping) from [env], suitable for
+      use as the [~rreg] parameter to {!marshal}. This starts from the env's
+      [make-image-dict] and augments it with any newly bound cfunctions or
+      abstract values. *)
   let make_image_dict (env : Env.t) : Env.t =
+    let base =
+      Env.Binding.lookup ~env "make-image-dict"
+      |> Env.Binding.to_janet
+      |> F.janet_unwrap_table
+    in
+    let out = copy_table base in
     let forward = F.janet_env_lookup env in
-    let reverse = Janet_table.create (Janet_table.count forward) in
-    Janet_table.iter forward ~f:(fun k v -> Janet_table.put reverse ~key:v ~value:k);
-    reverse
+    Janet_table.iter forward ~f:(fun sym value ->
+      if
+        (is_cfunction value || is_abstract value)
+        && is_nil (Janet_table.get out ~key:value)
+      then Janet_table.put out ~key:value ~value:sym);
+    out
   ;;
 
   (** Build a forward registry (symbol→value mapping) from [env], suitable for
-      use as the [~reg] parameter to {!unmarshal}. *)
-  let load_image_dict (env : Env.t) : Env.t = F.janet_env_lookup env
+      use as the [~reg] parameter to {!unmarshal}. This starts from the env's
+      [load-image-dict] and augments it with any newly bound cfunctions or
+      abstract values. *)
+  let load_image_dict (env : Env.t) : Env.t =
+    let base =
+      Env.Binding.lookup ~env "load-image-dict"
+      |> Env.Binding.to_janet
+      |> F.janet_unwrap_table
+    in
+    let out = copy_table base in
+    let forward = F.janet_env_lookup env in
+    Janet_table.iter forward ~f:(fun sym value ->
+      if
+        (is_cfunction value || is_abstract value) && is_nil (Janet_table.get out ~key:sym)
+      then Janet_table.put out ~key:sym ~value);
+    out
   ;;
 
   (** Unmarshal a binary image string back to a Janet value.
