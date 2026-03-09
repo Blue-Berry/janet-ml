@@ -4,6 +4,7 @@ module Make (I : Janet_sig.S) = struct
   module T = Janet_c.C.Types
   module Env = Env.Make (I)
   module Janet_buffer = Janet_buffer.Make (I)
+  module Janet_table = Janet_table.Make (I)
 
   (** Marshal a Janet value to a binary image string.
       [rreg] is the reverse registry (value→symbol mapping) used to serialize
@@ -37,7 +38,12 @@ module Make (I : Janet_sig.S) = struct
       suitable for use as the [~rreg] parameter to {!marshal}.
       Unlike the stored [make-image-dict] snapshot, this captures bindings
       added after the environment was created (e.g. registered cfunctions). *)
-  let make_image_dict (env : Env.t) : Env.t = F.janet_env_lookup env
+  let make_image_dict (env : Env.t) : Env.t =
+    let forward = F.janet_env_lookup env in
+    let reverse = Janet_table.create (Janet_table.count forward) in
+    Janet_table.iter forward ~f:(fun k v -> Janet_table.put reverse ~key:v ~value:k);
+    reverse
+  ;;
 
   (** Return the [load-image-dict] table from [env] (symbol→value mapping),
       suitable for use as the [~reg] parameter to {!unmarshal}. *)
