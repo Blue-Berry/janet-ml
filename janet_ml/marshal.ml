@@ -33,13 +33,11 @@ module Make (I : Janet_sig.S) = struct
     marshal ~unsafe ~no_cycles ~rreg:env target
   ;;
 
-  (** Return the [make-image-dict] table from [env] (value→symbol mapping),
-      suitable for use as the [~rreg] parameter to {!marshal}. *)
-  let make_image_dict (env : Env.t) : Env.t =
-    Env.Binding.lookup ~env "make-image-dict"
-    |> Env.Binding.to_janet
-    |> F.janet_unwrap_table
-  ;;
+  (** Build a fresh reverse registry (value→symbol mapping) from [env],
+      suitable for use as the [~rreg] parameter to {!marshal}.
+      Unlike the stored [make-image-dict] snapshot, this captures bindings
+      added after the environment was created (e.g. registered cfunctions). *)
+  let make_image_dict (env : Env.t) : Env.t = F.janet_env_lookup env
 
   (** Return the [load-image-dict] table from [env] (symbol→value mapping),
       suitable for use as the [~reg] parameter to {!unmarshal}. *)
