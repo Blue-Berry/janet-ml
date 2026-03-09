@@ -45,12 +45,9 @@ module Make (I : Janet_sig.S) = struct
     reverse
   ;;
 
-  (** Return the [load-image-dict] table from [env] (symbol→value mapping),
-      suitable for use as the [~reg] parameter to {!unmarshal}. *)
-  let load_image_dict (env : Env.t) : Env.t =
-    Env.Binding.lookup ~env "load-image-dict"
-    |> Env.Binding.to_janet
-    |> F.janet_unwrap_table
+  (** Build a forward registry (symbol→value mapping) from [env], suitable for
+      use as the [~reg] parameter to {!unmarshal}. *)
+  let load_image_dict (env : Env.t) : Env.t = F.janet_env_lookup env
   ;;
 
   (** Unmarshal a binary image string back to a Janet value.
