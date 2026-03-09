@@ -248,3 +248,155 @@ let with_janet_env (f : Env.t -> 'a) =
     let env = Env.core_env () in
     f env)
 ;;
+
+(* Conversion *)
+
+let to_keyword j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Keyword k -> Some k
+       | _ -> None)
+;;
+
+let to_keyword_exn j = to_keyword j |> Option.value_exn ~message:"Not a keyword"
+
+let to_number j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Number k -> Some k
+       | _ -> None)
+;;
+
+let to_number_exn j = to_number j |> Option.value_exn ~message:"Not a number"
+
+let to_function j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Function k -> Some k
+       | _ -> None)
+;;
+
+let to_function_exn j = to_function j |> Option.value_exn ~message:"Not a function"
+
+let to_bool j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Boolean b -> Some b
+       | _ -> None)
+;;
+
+let to_bool_exn j = to_bool j |> Option.value_exn ~message:"Not a boolean"
+
+let to_janet_string j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | String s -> Some s
+       | _ -> None)
+;;
+
+let to_janet_string_exn j = to_janet_string j |> Option.value_exn ~message:"Not a string"
+
+let to_symbol j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Symbol s -> Some s
+       | _ -> None)
+;;
+
+let to_symbol_exn j = to_symbol j |> Option.value_exn ~message:"Not a symbol"
+
+let to_array j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Array x -> Some x
+       | _ -> None)
+;;
+
+let to_array_exn j = to_array j |> Option.value_exn ~message:"Not an array"
+
+let to_tuple j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Tuple x -> Some x
+       | _ -> None)
+;;
+
+let to_tuple_exn j = to_tuple j |> Option.value_exn ~message:"Not a tuple"
+
+let to_table j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Table x -> Some x
+       | _ -> None)
+;;
+
+let to_table_exn j = to_table j |> Option.value_exn ~message:"Not a table"
+
+let to_struct j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Struct x -> Some x
+       | _ -> None)
+;;
+
+let to_struct_exn j = to_struct j |> Option.value_exn ~message:"Not a struct"
+
+let to_buffer j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Buffer x -> Some x
+       | _ -> None)
+;;
+
+let to_buffer_exn j = to_buffer j |> Option.value_exn ~message:"Not a buffer"
+
+let to_fiber j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Fiber x -> Some x
+       | _ -> None)
+;;
+
+let to_fiber_exn j = to_fiber j |> Option.value_exn ~message:"Not a fiber"
+
+let to_cfunction j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | CFunction x -> Some x
+       | _ -> None)
+;;
+
+let to_cfunction_exn j = to_cfunction j |> Option.value_exn ~message:"Not a cfunction"
+
+let to_int64 j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | Int x -> Some x
+       | _ -> None)
+;;
+
+let to_int64_exn j = to_int64 j |> Option.value_exn ~message:"Not an int64"
+
+let to_uint64 j =
+  Unwrapped.of_janet j
+  |> Unwrapped.(
+       function
+       | UInt x -> Some x
+       | _ -> None)
+;;
+
+let to_uint64_exn j = to_uint64 j |> Option.value_exn ~message:"Not a uint64"

@@ -575,3 +575,36 @@ val dobytes_exn : ?source_path:string -> env:Table.t -> bytes -> t
 val mcall : string -> t list -> t
 val mcall_exn : string -> t list -> t
 val with_janet_env : (Env.t -> 'a) -> 'a
+
+(* -- Conversions from Janet values -- *)
+
+val to_keyword : t -> string option
+val to_keyword_exn : t -> string
+val to_number : t -> float option
+val to_number_exn : t -> float
+val to_function : t -> Function.t option
+val to_function_exn : t -> Function.t
+val to_bool : t -> bool option
+val to_bool_exn : t -> bool
+val to_janet_string : t -> string option
+val to_janet_string_exn : t -> string
+val to_symbol : t -> string option
+val to_symbol_exn : t -> string
+val to_array : t -> Array.t option
+val to_array_exn : t -> Array.t
+val to_tuple : t -> Tuple.t option
+val to_tuple_exn : t -> Tuple.t
+val to_table : t -> Table.t option
+val to_table_exn : t -> Table.t
+val to_struct : t -> Struct.t option
+val to_struct_exn : t -> Struct.t
+val to_buffer : t -> bytes option
+val to_buffer_exn : t -> bytes
+val to_fiber : t -> Fiber.t option
+val to_fiber_exn : t -> Fiber.t
+val to_cfunction : t -> Cfunction.t option
+val to_cfunction_exn : t -> Cfunction.t
+val to_int64 : t -> int64 option
+val to_int64_exn : t -> int64
+val to_uint64 : t -> Unsigned.uint64 option
+val to_uint64_exn : t -> Unsigned.uint64
