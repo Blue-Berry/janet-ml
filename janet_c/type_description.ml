@@ -196,6 +196,9 @@ module Types (F : Ctypes.TYPE) = struct
     structure "JanetAbstractType"
   ;;
 
+  (* JanetChannel - opaque, only used via pointer *)
+  let janet_channel : [ `janet_channel ] structure typ = structure "JanetChannel"
+
   (* JanetParserStatus enum *)
   type janet_parser_status =
     | Parse_root

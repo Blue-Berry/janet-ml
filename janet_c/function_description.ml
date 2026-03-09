@@ -16,6 +16,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_compile_result_s = Types.Janet_Compile_Result.t
   let janet_abstract_type_s = Types.janet_abstract_type
   let janet_parser_s = Types.Janet_Parser.t
+  let janet_channel_s = Types.janet_channel
   let janet_binding_type_enum = Types.janet_binding_type_enum
 
   (* Initialization *)
@@ -652,6 +653,39 @@ module Functions (F : Ctypes.FOREIGN) = struct
   let janet_dyn = foreign "janet_dyn" (string @-> returning janet)
   let janet_setdyn = foreign "janet_setdyn" (string @-> janet @-> returning void)
 
+  (* Channel operations *)
+  let janet_channel_make =
+    foreign "janet_channel_make" (uint32_t @-> returning (ptr janet_channel_s))
+  ;;
+
+  let janet_channel_make_threaded =
+    foreign "janet_channel_make_threaded" (uint32_t @-> returning (ptr janet_channel_s))
+  ;;
+
+  let janet_getchannel =
+    foreign
+      "janet_getchannel"
+      (ptr (const janet) @-> int32_t @-> returning (ptr janet_channel_s))
+  ;;
+
+  let janet_optchannel =
+    foreign
+      "janet_optchannel"
+      (ptr (const janet)
+       @-> int32_t
+       @-> int32_t
+       @-> ptr janet_channel_s
+       @-> returning (ptr janet_channel_s))
+  ;;
+
+  let janet_channel_give =
+    foreign "janet_channel_give" (ptr janet_channel_s @-> janet @-> returning int)
+  ;;
+
+  let janet_channel_take =
+    foreign "janet_channel_take" (ptr janet_channel_s @-> ptr janet @-> returning int)
+  ;;
+
   (* TODO: Remaining JANET_API functions to bind
    *
    * -- Abstract types --
@@ -725,12 +759,6 @@ module Functions (F : Ctypes.FOREIGN) = struct
    * janet_cfuns_ext_prefix
    * janet_cfuns_prefix
    *
-   * -- Channels --
-   * janet_channel_give
-   * janet_channel_make
-   * janet_channel_make_threaded
-   * janet_channel_take
-   *
    * -- Type checking (get/opt from argv) --
    * janet_checkfile
    * janet_checkint
@@ -747,7 +775,6 @@ module Functions (F : Ctypes.FOREIGN) = struct
    * janet_getbytes
    * janet_getcbytes
    * janet_getcfunction
-   * janet_getchannel
    * janet_getcstring
    * janet_getdictionary
    * janet_getendrange
@@ -783,7 +810,6 @@ module Functions (F : Ctypes.FOREIGN) = struct
    * janet_optbuffer
    * janet_optcbytes
    * janet_optcfunction
-   * janet_optchannel
    * janet_optcstring
    * janet_optfiber
    * janet_optfunction

@@ -403,6 +403,31 @@ and Ev : sig
   val loop_fiber : Fiber.t -> int
 end
 
+and Channel : sig
+  type t = Type.channel
+
+  (** Create a channel with an optional capacity limit (0 = unbounded). *)
+  val make : ?limit:int -> unit -> t
+
+  (** Create a threaded channel (safe for cross-thread use). *)
+  val make_threaded : ?limit:int -> unit -> t
+
+  (** Give a value to the channel. Returns [true] on success. *)
+  val give : t -> Janet.t -> bool
+
+  (** Take a value from the channel. Returns [Some v] on success, [None] on failure. *)
+  val take : t -> Janet.t option
+
+  (** Extract a channel from a Janet C function's argv at index [n]. *)
+  val get_from_argv : Janet.ptr -> int -> t
+
+  (** Optionally extract a channel from argv, with a default. *)
+  val opt_from_argv : Janet.ptr -> argc:int -> int -> t -> t
+
+  (** Wrap a channel as a Janet abstract value. *)
+  val to_janet : t -> Janet.t
+end
+
 and Env : sig
   type t = Table.t
 

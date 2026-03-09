@@ -18,3 +18,4 @@ type struct_t = [ `janet_struct_head ] Ctypes.structure Ctypes_static.ptr
 type table = [ `janet_table ] Ctypes.structure Ctypes_static.ptr
 type tuple = [ `janet_tuple_head ] Ctypes.structure Ctypes_static.ptr
 type vm = [ `janet_vm ] Ctypes.structure Ctypes_static.ptr
+type channel = [ `janet_channel ] Ctypes.structure Ctypes_static.ptr
